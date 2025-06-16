@@ -267,11 +267,7 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
-import { ref, computed, onMounted } from 'vue'
-=======
 import { ref, computed } from 'vue'
->>>>>>> 418b92c586ecca523a10ec755ae32b17f8f80e68
 
 // Установка темы приложения
 useColorMode().value = 'dark'
@@ -293,12 +289,6 @@ const tabs = [
 // MQTT интеграция
 const mqtt = useMqtt()
 
-<<<<<<< HEAD
-// Админ-панель
-const admin = useAdmin()
-
-=======
->>>>>>> 418b92c586ecca523a10ec755ae32b17f8f80e68
 // Настройки MQTT
 const mqttSettings = ref({
   url: mqtt.defaultConfig.value.url,
@@ -382,15 +372,6 @@ const disconnectMqtt = () => {
 // Используем новый composable для работы с временем
 const { formatTime, getRelativeTime, getConnectionStatus } = useTime()
 
-<<<<<<< HEAD
-// Инициализация при монтировании
-onMounted(() => {
-  admin.initializeAdmin()
-  admin.addAdminLog('info', 'MapMon приложение запущено')
-})
-
-=======
->>>>>>> 418b92c586ecca523a10ec755ae32b17f8f80e68
 // Метаданные страницы
 useHead({
   title: 'Fleet Monitor - Мониторинг техники',
