@@ -1,0 +1,53 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Node dependencies
+node_modules
+
+# Logs
+*.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Build outputs
+*.tgz
+*.tar.gz
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# PM2 ecosystem file (будет создан на сервере)
+ecosystem.config.js
+
+# Backup folders
+MapMon-backup-*
+
+# Temporary files
+*.tmp
+*.temp 
