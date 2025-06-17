@@ -1,0 +1,31 @@
+# ⚡ БЫСТРОЕ ВОССТАНОВЛЕНИЕ САЙТА
+
+## Выполните эти команды НЕМЕДЛЕННО:
+
+ssh root@147.45.213.22
+
+# Проверка статуса
+pm2 status
+
+# Если mapmon показывает "stopped" или "errored":
+cd /var/www/mapmon
+pm2 restart mapmon
+
+# Если не помогает - полная перезагрузка:
+pm2 stop mapmon
+pm2 start mapmon
+
+# Если все еще не работает - проверка логов:
+pm2 logs mapmon --lines 10
+
+# ЭКСТРЕННОЕ РЕШЕНИЕ - откат к рабочей версии:
+cd /var/www/mapmon
+git reset --hard 418b92c
+rm -rf .nuxt .output
+yarn build
+pm2 restart mapmon
+
+# Проверка результата:
+curl -I https://fleetmonitor.ru
+
+## Если сайт заработал - можно потом вернуться к админ-панели 

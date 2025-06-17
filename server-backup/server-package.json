@@ -1,6 +1,6 @@
 {
   "name": "fleet-monitor",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "type": "module",
   "private": true,
   "scripts": {
@@ -11,7 +11,11 @@
   "dependencies": {
     "@nuxt/ui": "^2.22.0",
     "apexcharts": "^4.7.0",
+    "better-sqlite3": "^11.10.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "maplibre-gl": "^5.6.0",
+    "mqtt": "^5.13.1",
     "nuxt": "^3.13.0",
     "vue": "^3.5.12",
     "vue3-apexcharts": "^1.8.0"
