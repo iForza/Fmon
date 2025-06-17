@@ -130,90 +130,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Вкладка API статуса -->
-            <div v-if="activeTab === 'api'" class="p-4">
-              <div class="space-y-4">
-                <!-- Статус подключения -->
-                <div class="bg-gray-700 rounded-lg p-3">
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="text-white font-medium">Статус API</span>
-                    <div
-                      :class="[
-                        'w-3 h-3 rounded-full',
-                        api.isConnected.value ? 'bg-green-500' : 
-                        api.isLoading.value ? 'bg-yellow-500' : 'bg-red-500'
-                      ]"
-                    />
-                  </div>
-                  <div class="text-sm text-gray-400">
-                    {{ api.isConnected.value ? 'Подключен к серверному API' : 
-                       api.isLoading.value ? 'Загрузка...' : 'Отключен' }}
-                  </div>
-                  <div v-if="api.error.value" class="text-sm text-red-400 mt-1">
-                    Ошибка: {{ api.error.value }}
-                  </div>
-                </div>
-
-                <!-- Информация о системе -->
-                <div class="space-y-3">
-                  <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide">Архитектура</h3>
-                  
-                  <div class="bg-gray-700 rounded-lg p-3">
-                    <div class="text-sm text-white mb-2">Поток данных:</div>
-                    <div class="text-xs text-gray-400 space-y-1">
-                      <div>📡 ESP32 → EMQX Cloud MQTT</div>
-                      <div>🖥️ → Серверный MQTT коллектор</div>
-                      <div>💾 → SQLite база данных</div>
-                      <div>🔗 → API сервер (порт 3001)</div>
-                      <div>🌐 → Frontend (этот интерфейс)</div>
-                    </div>
-                  </div>
-
-                  <div class="bg-gray-700 rounded-lg p-3">
-                    <div class="text-sm text-white mb-2">Преимущества:</div>
-                    <div class="text-xs text-gray-400 space-y-1">
-                      <div>✅ Нет дублирования MQTT подключений</div>
-                      <div>✅ Централизованное хранение в SQLite</div>
-                      <div>✅ Меньше нагрузки на MQTT брокер</div>
-                      <div>✅ Надежность и кэширование данных</div>
-                    </div>
-                  </div>
-
-                  <!-- Кнопки управления -->
-                  <div class="space-y-2">
-                    <button
-                      @click="refreshData"
-                      :disabled="api.isLoading.value"
-                      class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors"
-                    >
-                      {{ api.isLoading.value ? 'Обновление...' : 'Обновить данные' }}
-                    </button>
-                    
-                    <button
-                      @click="checkApiStatus"
-                      class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors"
-                    >
-                      Проверить статус API
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Вкладка аналитики -->
-            <div v-if="activeTab === 'analytics'" class="p-4">
-              <div class="space-y-4">
-                <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wide">Статистика</h3>
-                
-                <div class="bg-gray-700 rounded-lg p-3">
-                  <div class="text-sm text-white mb-2">Активность техники</div>
-                  <div class="text-xs text-gray-400">
-                    Данные обновляются в реальном времени через серверный API
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -248,9 +164,7 @@ const selectedVehicleId = ref(null)
 
 // Вкладки
 const tabs = [
-  { id: 'vehicles', label: 'Техника', icon: '🚜' },
-  { id: 'api', label: 'API', icon: '🔗' },
-  { id: 'analytics', label: 'Аналитика', icon: '📊' }
+  { id: 'vehicles', label: 'Техника', icon: '🚜' }
 ]
 
 // Функции

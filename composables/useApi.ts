@@ -180,8 +180,8 @@ export const useApi = () => {
       await fetchVehicles()
       await fetchTelemetry()
       
-      // Подключаем WebSocket для real-time обновлений
-      connectWebSocket()
+      // Отключили WebSocket пока его нет на сервере
+      // connectWebSocket()
       
       console.log('✅ API клиент инициализирован')
     } else {
