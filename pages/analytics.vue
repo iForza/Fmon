@@ -238,8 +238,8 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 // Установка темы приложения
 useColorMode().value = 'dark'
 
-// MQTT composable
-const mqtt = useMqtt()
+// API composable (вместо MQTT)
+const api = useApi()
 
 // Убраны демо данные - используем только реальные ESP32 устройства
 
@@ -251,8 +251,8 @@ const esp32DataCache = ref([])
 
 // Получаем данные техники - только реальные ESP32 устройства
 const vehicles = computed(() => {
-  // Проверяем есть ли реальные ESP32 устройства в MQTT
-  const realDevices = mqtt.vehicles.value.filter(v => v.id && v.id.startsWith('ESP32_'))
+  // Проверяем есть ли реальные ESP32 устройства в API
+  const realDevices = api.vehicles.value.filter(v => v.id && v.id.startsWith('ESP32_'))
   
   if (realDevices.length > 0) {
     // Если есть реальные ESP32 устройства, обновляем кэш и показываем их
@@ -261,17 +261,17 @@ const vehicles = computed(() => {
     return realDevices
   }
   
-  // Если нет данных в MQTT, но есть в кэше - используем кэш
+  // Если нет данных в API, но есть в кэше - используем кэш
   if (esp32DataCache.value.length > 0) {
     console.log('Analytics: Используем кэшированные ESP32 данные:', esp32DataCache.value)
     return esp32DataCache.value
   }
   
   // Если нет реальных устройств - возвращаем пустой массив
-  if (mqtt.isConnected.value) {
-    console.log('Analytics: MQTT подключен, ждем данные ESP32...')
+  if (api.isConnected.value) {
+    console.log('Analytics: API подключен, ждем данные ESP32...')
   } else {
-    console.log('Analytics: MQTT не подключен, ждем подключения...')
+    console.log('Analytics: API не подключен, ждем подключения...')
   }
   return []
 })
@@ -713,19 +713,19 @@ let updateInterval = null
 
 onMounted(async () => {
   console.log('Analytics: Страница загружена')
-  console.log('Analytics: MQTT статус:', mqtt.isConnected.value)
-  console.log('Analytics: MQTT данные:', mqtt.vehicles.value)
+  console.log('Analytics: API статус:', api.isConnected.value)
+  console.log('Analytics: API данные:', api.vehicles.value)
   
-  // Подключаемся к MQTT если не подключены
-  if (!mqtt.isConnected.value) {
-    console.log('Analytics: Подключаемся к MQTT...')
-    await mqtt.connect()
+  // Подключаемся к API если не подключены
+  if (!api.isConnected.value) {
+    console.log('Analytics: Подключаемся к API...')
+    await api.connect()
   }
   
   // Ждем немного для получения данных (только в браузере)
   if (process.client) {
     setTimeout(() => {
-      console.log('Analytics: Данные после подключения:', mqtt.vehicles.value)
+      console.log('Analytics: Данные после подключения:', api.vehicles.value)
       updateChartData()
     }, 2000)
   }
@@ -753,9 +753,9 @@ watch(vehicles, (newVehicles, oldVehicles) => {
   updateChartData()
 }, { deep: true, immediate: true })
 
-// Следим за изменениями статуса MQTT
-watch(() => mqtt.isConnected.value, (connected) => {
-  console.log('Analytics: MQTT статус изменился:', connected)
+// Следим за изменениями статуса API
+watch(() => api.isConnected.value, (connected) => {
+  console.log('Analytics: API статус изменился:', connected)
   if (connected && process.client) {
     setTimeout(() => {
       updateChartData()
@@ -763,9 +763,9 @@ watch(() => mqtt.isConnected.value, (connected) => {
   }
 })
 
-// Следим за изменениями в MQTT данных
-watch(() => mqtt.vehicles.value, (newData) => {
-  console.log('Analytics: MQTT данные изменились:', newData)
+// Следим за изменениями в API данных
+watch(() => api.vehicles.value, (newData) => {
+  console.log('Analytics: API данные изменились:', newData)
   updateChartData()
 }, { deep: true })
 
