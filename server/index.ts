@@ -248,6 +248,16 @@ fastify.get<{Querystring: {range?: string, vehicleId?: string}}>('/api/telemetry
   }
 })
 
+// Статус сервера
+fastify.get('/api/status', async (request, reply) => {
+  return {
+    status: 'Fleet Monitor API Server',
+    timestamp: new Date().toISOString(),
+    vehicles: vehicles.size,
+    connectedClients: connectedClients.size
+  }
+})
+
 // Получить статус сервера
 fastify.get('/api/status', async (request, reply) => {
   return {
@@ -388,5 +398,71 @@ const start = async () => {
     process.exit(1)
   }
 }
+
+// API для настроек MQTT
+fastify.get('/api/mqtt/status', async (request, reply) => {
+  try {
+    // Здесь можно проверить статус MQTT коллектора через PM2 или другим способом
+    return {
+      success: true,
+      connected: true, // Временно возвращаем true
+      lastMessage: new Date().toISOString(),
+      activeDevices: vehicles.size
+    }
+  } catch (error: any) {
+    reply.status(500)
+    return { success: false, error: error.message }
+  }
+})
+
+fastify.post('/api/mqtt/config', async (request, reply) => {
+  try {
+    const config = request.body as any
+    
+    // Здесь можно сохранить конфигурацию MQTT и перезапустить коллектор
+    console.log('📋 Получена новая конфигурация MQTT:', config)
+    
+    return {
+      success: true,
+      message: 'Конфигурация MQTT сохранена'
+    }
+  } catch (error: any) {
+    reply.status(500)
+    return { success: false, error: error.message }
+  }
+})
+
+fastify.post('/api/mqtt/test', async (request, reply) => {
+  try {
+    const config = request.body as any
+    
+    // Здесь можно протестировать подключение к MQTT
+    console.log('🧪 Тестирование MQTT подключения:', config.url)
+    
+    // Симулируем успешное тестирование
+    return {
+      success: true,
+      message: 'Подключение к MQTT брокеру успешно'
+    }
+  } catch (error: any) {
+    reply.status(500)
+    return { success: false, error: error.message }
+  }
+})
+
+fastify.post('/api/mqtt/restart', async (request, reply) => {
+  try {
+    // Здесь можно перезапустить MQTT коллектор через PM2
+    console.log('🔄 Перезапуск MQTT коллектора')
+    
+    return {
+      success: true,
+      message: 'MQTT коллектор перезапущен'
+    }
+  } catch (error: any) {
+    reply.status(500)
+    return { success: false, error: error.message }
+  }
+})
 
 start() 

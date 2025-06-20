@@ -39,6 +39,20 @@
         </span>
       </div>
 
+      <!-- Индикатор MQTT -->
+      <div class="flex items-center space-x-2">
+        <div 
+          :class="[
+            'w-3 h-3 rounded-full',
+            mqttStatus === 'connected' ? 'bg-blue-500' : 
+            mqttStatus === 'connecting' ? 'bg-yellow-500' : 'bg-gray-500'
+          ]"
+        />
+        <span class="text-sm text-gray-300">
+          MQTT {{ getMqttStatusText() }}
+        </span>
+      </div>
+
       <!-- Кнопка настроек -->
       <UButton
         variant="ghost"
@@ -56,18 +70,29 @@
         Пользователь
       </UButton>
     </div>
+
+    <!-- Модальное окно настроек -->
+    <SettingsModal v-model="isSettingsOpen" />
   </header>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
+import { useMqttSettings } from '~/composables/useMqttSettings'
 
-// Получаем API данные вместо MQTT
+// Получаем API данные
 const api = useApi()
 
-// Состояние API подключения
+// Получаем MQTT настройки
+const mqttSettings = useMqttSettings()
+
+// Состояние модального окна настроек
+const isSettingsOpen = ref(false)
+
+// Состояние подключений
 const apiConnected = computed(() => api.isConnected.value)
+const mqttStatus = computed(() => mqttSettings.connectionStatus.value)
 
 // Навигационные вкладки
 const tabs = [
@@ -78,6 +103,21 @@ const tabs = [
 
 // Функции
 const openSettings = () => {
-  console.log('Открыть настройки')
+  isSettingsOpen.value = true
 }
+
+const getMqttStatusText = () => {
+  switch (mqttStatus.value) {
+    case 'connected': return 'подключен'
+    case 'connecting': return 'подключение...'
+    case 'disconnected': return 'отключен'
+    case 'error': return 'ошибка'
+    default: return 'неизвестно'
+  }
+}
+
+// Инициализация при монтировании
+onMounted(() => {
+  mqttSettings.initialize()
+})
 </script> 

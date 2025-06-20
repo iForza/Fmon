@@ -1,5 +1,5 @@
 const mqtt = require('mqtt');
-const SQLiteManager = require('../sqlite/SQLiteManager.cjs');
+const SQLiteManager = require('./SQLiteManager.cjs');
 const db = new SQLiteManager();
 
 console.log('🔌 Connecting to EMQX Cloud (correct URL)...');
