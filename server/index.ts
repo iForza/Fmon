@@ -162,6 +162,102 @@ fastify.post<{Body: TelemetryMessage}>('/api/telemetry', async (request, reply) 
   }
 })
 
+// Получить последнюю телеметрию
+fastify.get('/api/telemetry/latest', async (request, reply) => {
+  const telemetryData = Array.from(vehicles.values()).map(vehicle => ({
+    vehicle_id: vehicle.id,
+    vehicle_name: vehicle.name,
+    lat: vehicle.lat,
+    lng: vehicle.lng,
+    speed: vehicle.speed,
+    battery: vehicle.battery,
+    temperature: Math.random() * 40 + 20, // Симуляция температуры 20-60°C
+    rpm: Math.random() * 2000 + 500, // Симуляция RPM 500-2500
+    timestamp: vehicle.lastUpdate.toISOString()
+  }))
+  
+  return {
+    success: true,
+    data: telemetryData
+  }
+})
+
+// Получить историю телеметрии для графиков
+fastify.get<{Querystring: {range?: string, vehicleId?: string}}>('/api/telemetry/history', async (request, reply) => {
+  const { range = '10min', vehicleId } = request.query
+  
+  // Определяем количество точек и интервал в зависимости от диапазона
+  const ranges: Record<string, {points: number, interval: number}> = {
+    '10min': { points: 20, interval: 30 }, // 20 точек с интервалом 30 сек
+    '1h': { points: 30, interval: 120 }, // 30 точек с интервалом 2 мин
+    '6h': { points: 36, interval: 600 }, // 36 точек с интервалом 10 мин
+    '12h': { points: 36, interval: 1200 }, // 36 точек с интервалом 20 мин
+    '24h': { points: 48, interval: 1800 } // 48 точек с интервалом 30 мин
+  }
+  
+  const config = ranges[range] || ranges['10min']
+  const now = new Date()
+  const history: any[] = []
+  
+  // Фильтруем технику если указан vehicleId
+  const targetVehicles = vehicleId 
+    ? Array.from(vehicles.values()).filter(v => v.id === vehicleId)
+    : Array.from(vehicles.values())
+  
+  targetVehicles.forEach(vehicle => {
+    const vehicleHistory: any[] = []
+    
+    // Генерируем исторические данные
+    for (let i = config.points; i >= 0; i--) {
+      const timestamp = new Date(now.getTime() - (i * config.interval * 1000))
+      
+      // Реалистичная симуляция данных
+      const baseSpeed = vehicle.speed || 0
+      const speed = Math.max(0, baseSpeed + (Math.random() - 0.5) * 10)
+      
+      const baseTemp = 35 + Math.sin(i * 0.1) * 15 // Температура 20-50°C с трендом
+      const temperature = baseTemp + (Math.random() - 0.5) * 5
+      
+      const baseBattery = vehicle.battery || 80
+      const battery = Math.max(10, Math.min(100, baseBattery + (Math.random() - 0.5) * 5))
+      
+      const baseRpm = speed > 0 ? 800 + speed * 30 : 0 // RPM зависит от скорости
+      const rpm = baseRpm + (Math.random() - 0.5) * 200
+      
+      vehicleHistory.push({
+        timestamp: timestamp.getTime(),
+        speed: Math.round(speed * 100) / 100,
+        temperature: Math.round(temperature * 100) / 100,
+        battery: Math.round(battery * 100) / 100,
+        rpm: Math.round(Math.max(0, rpm))
+      })
+    }
+    
+    history.push({
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.name,
+      data: vehicleHistory
+    })
+  })
+  
+  return {
+    success: true,
+    data: history,
+    range,
+    count: history.length
+  }
+})
+
+// Получить статус сервера
+fastify.get('/api/status', async (request, reply) => {
+  return {
+    status: 'API Server running with SQLite',
+    timestamp: new Date().toISOString(),
+    vehicles: vehicles.size,
+    database: 'In-Memory Storage'
+  }
+})
+
 // WebSocket для real-time обновлений
 fastify.register(async function (fastify) {
   fastify.get('/ws', { websocket: true }, (connection, req) => {

@@ -3,7 +3,7 @@
     <!-- Заголовок страницы -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-white mb-2">📊 Аналитика и Графики</h1>
-      <p class="text-gray-400">Телеметрия техники в реальном времени через API</p>
+      <p class="text-gray-400">Интерактивные графики телеметрии с поддержкой zoom</p>
     </div>
 
     <!-- Статистические карточки -->
@@ -57,125 +57,149 @@
       </div>
     </div>
 
-    <!-- Статус API -->
-    <div class="mb-6 bg-gray-800 rounded-lg p-4">
-      <div class="flex items-center space-x-3">
-        <div 
-          :class="[
-            'w-3 h-3 rounded-full',
-            api.isConnected.value ? 'bg-green-500' : 'bg-red-500'
-          ]"
-        />
-        <span class="text-white font-medium">
-          {{ api.isConnected.value ? 'API подключен' : 'API отключен' }}
-        </span>
-        <button 
-          @click="refreshData"
-          class="ml-auto bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm"
-        >
-          Обновить данные
-        </button>
-      </div>
-    </div>
-
-    <!-- Таблица техники -->
-    <div class="bg-gray-800 rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-white mb-4">📋 Список техники</h3>
-      
-      <div v-if="vehicles.length === 0" class="text-center py-8 text-gray-400">
-        {{ api.isConnected.value ? 'Нет данных о технике' : 'Подключение к API...' }}
-      </div>
-      
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-700">
-              <th class="text-left py-3 px-4 text-gray-400">Техника</th>
-              <th class="text-left py-3 px-4 text-gray-400">Скорость</th>
-              <th class="text-left py-3 px-4 text-gray-400">Координаты</th>
-              <th class="text-left py-3 px-4 text-gray-400">Температура</th>
-              <th class="text-left py-3 px-4 text-gray-400">Батарея</th>
-              <th class="text-left py-3 px-4 text-gray-400">Статус</th>
-              <th class="text-left py-3 px-4 text-gray-400">Обновлено</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="vehicle in vehicles"
-              :key="vehicle.id"
-              class="border-b border-gray-700 hover:bg-gray-700/50"
+    <!-- Панель управления графиками -->
+    <div class="mb-6 bg-gray-800 rounded-lg p-6">
+      <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+        <!-- Селектор техники -->
+        <div class="flex items-center space-x-4">
+          <label class="text-gray-400 text-sm">Техника:</label>
+          <select 
+            v-model="chartData.selectedVehicleId.value"
+            @change="chartData.setSelectedVehicle(chartData.selectedVehicleId.value)"
+            class="bg-gray-700 text-white rounded-md px-3 py-2 text-sm min-w-[200px]"
+          >
+            <option value="all">Вся техника</option>
+            <option 
+              v-for="vehicle in vehicles" 
+              :key="vehicle.id" 
+              :value="vehicle.id"
             >
-              <td class="py-3 px-4 text-white font-medium">{{ vehicle.name || vehicle.id }}</td>
-              <td class="py-3 px-4 text-gray-300">{{ vehicle.speed || 0 }} км/ч</td>
-              <td class="py-3 px-4 text-gray-300 text-xs">
-                {{ vehicle.lat?.toFixed(4) || 'N/A' }}, {{ vehicle.lng?.toFixed(4) || 'N/A' }}
-              </td>
-              <td class="py-3 px-4 text-gray-300">
-                {{ vehicle.temperature ? vehicle.temperature.toFixed(1) + '°C' : 'N/A' }}
-              </td>
-              <td class="py-3 px-4 text-gray-300">
-                {{ vehicle.battery ? vehicle.battery.toFixed(1) + '%' : 'N/A' }}
-              </td>
-              <td class="py-3 px-4">
-                <span
-                  :class="[
-                    'px-2 py-1 rounded text-xs',
-                    vehicle.status === 'active' ? 'bg-green-600 text-white' :
-                    vehicle.status === 'offline' ? 'bg-gray-600 text-white' : 'bg-red-600 text-white'
-                  ]"
-                >
-                  {{ vehicle.status || 'unknown' }}
-                </span>
-              </td>
-              <td class="py-3 px-4 text-gray-400 text-xs">
-                {{ formatTime(vehicle.lastUpdate) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              {{ vehicle.name || vehicle.id }}
+            </option>
+          </select>
+        </div>
+        
+        <!-- Кнопки временных диапазонов -->
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="range in chartData.timeRanges"
+            :key="range.value"
+            @click="chartData.setTimeRange(range.value)"
+            :class="[
+              'px-4 py-2 rounded-md text-sm font-medium transition-colors',
+              chartData.selectedTimeRange.value === range.value
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            ]"
+          >
+            {{ range.label }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- Информация о текущем диапазоне -->
+      <div class="mt-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div 
+            :class="[
+              'w-3 h-3 rounded-full',
+              chartData.isLoading.value ? 'bg-yellow-500' : 
+              chartData.hasData.value ? 'bg-green-500' : 'bg-red-500'
+            ]"
+          />
+          <span class="text-sm text-gray-400">
+            {{ 
+              chartData.isLoading.value ? 'Загрузка данных...' :
+              chartData.hasData.value ? `Отображается: ${chartData.currentTimeRange.value?.label}` :
+              'Нет данных для отображения'
+            }}
+          </span>
+        </div>
+        
+        <div class="text-xs text-gray-500">
+          🖱️ Ctrl + колесико для zoom | Обновление каждые 5 сек
+        </div>
       </div>
     </div>
 
-    <!-- Отладочная информация -->
-    <div class="mt-8 bg-gray-800 rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-white mb-4">🔧 Отладочная информация</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-gray-700 rounded p-3">
-          <div class="text-sm text-gray-400 mb-1">API статус:</div>
-          <div class="text-white">{{ api.isConnected.value ? 'Подключен' : 'Отключен' }}</div>
-        </div>
-        <div class="bg-gray-700 rounded p-3">
-          <div class="text-sm text-gray-400 mb-1">Загрузка:</div>
-          <div class="text-white">{{ api.isLoading.value ? 'Да' : 'Нет' }}</div>
-        </div>
-        <div class="bg-gray-700 rounded p-3">
-          <div class="text-sm text-gray-400 mb-1">Ошибка:</div>
-          <div class="text-white">{{ api.error.value || 'Нет' }}</div>
-        </div>
-        <div class="bg-gray-700 rounded p-3">
-          <div class="text-sm text-gray-400 mb-1">Всего транспорта:</div>
-          <div class="text-white">{{ api.allVehicles.value.length }}</div>
-        </div>
+    <!-- Графики ECharts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- График скорости -->
+      <div class="bg-gray-800 rounded-lg p-6">
+        <ChartComponent
+          type="speed"
+          title="📈 Скорость техники"
+          :data="speedChartData"
+          unit="км/ч"
+          color="#3B82F6"
+        />
+      </div>
+
+      <!-- График температуры -->
+      <div class="bg-gray-800 rounded-lg p-6">
+        <ChartComponent
+          type="temperature"
+          title="🌡️ Температура двигателя"
+          :data="temperatureChartData"
+          unit="°C"
+          color="#EF4444"
+        />
+      </div>
+
+      <!-- График батареи -->
+      <div class="bg-gray-800 rounded-lg p-6">
+        <ChartComponent
+          type="battery"
+          title="🔋 Заряд батареи"
+          :data="batteryChartData"
+          unit="%"
+          color="#10B981"
+        />
+      </div>
+
+      <!-- График RPM -->
+      <div class="bg-gray-800 rounded-lg p-6">
+        <ChartComponent
+          type="rpm"
+          title="⚙️ Обороты двигателя"
+          :data="rpmChartData"
+          unit="RPM"
+          color="#8B5CF6"
+        />
+      </div>
+    </div>
+
+    <!-- Статус загрузки и ошибки -->
+    <div v-if="chartData.error.value" class="mt-6 bg-red-800/20 border border-red-500 rounded-lg p-4">
+      <div class="flex items-center space-x-2">
+        <span class="text-red-400">❌</span>
+        <span class="text-red-300">{{ chartData.error.value }}</span>
+        <button 
+          @click="chartData.fetchChartData()"
+          class="ml-auto bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"
+        >
+          Повторить
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { useTime } from '~/composables/useTime'
+import { useChartData } from '~/composables/useChartData'
 
 // Установка темы приложения
 useColorMode().value = 'dark'
 
-// API composable
+// Composables
 const api = useApi()
-const { formatTime } = useTime()
+const chartData = useChartData()
 
-// Получаем данные техники - только реальные ESP32 устройства
+// Получаем данные техники
 const vehicles = computed(() => {
-  return api.allVehicles.value.filter(v => v.id && (v.id.startsWith('ESP32_') || v.id.includes('Car')))
+  return api.allVehicles.value.filter(v => v.id && (v.id.startsWith('ESP32_') || v.id.includes('Car') || v.id.includes('tractor') || v.id.includes('combine')))
 })
 
 // Вычисляемые статистики
@@ -184,45 +208,64 @@ const activeVehiclesCount = computed(() => {
 })
 
 const averageSpeed = computed(() => {
-  const speeds = vehicles.value.map(v => v.speed).filter(s => s > 0)
-  return speeds.length > 0 ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0
+  if (!chartData.hasData.value || chartData.chartData.value.length === 0) {
+    const speeds = vehicles.value.map(v => v.speed).filter(s => s > 0)
+    return speeds.length > 0 ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0
+  }
+  
+  // Получаем среднюю скорость из данных графиков
+  const allSpeeds = []
+  chartData.chartData.value.forEach(vehicle => {
+    vehicle.data.forEach(point => {
+      if (point.speed > 0) allSpeeds.push(point.speed)
+    })
+  })
+  return allSpeeds.length > 0 ? allSpeeds.reduce((a, b) => a + b, 0) / allSpeeds.length : 0
 })
 
 const averageTemperature = computed(() => {
-  const temps = vehicles.value.map(v => v.temperature).filter(t => t != null)
-  return temps.length > 0 ? temps.reduce((a, b) => a + b, 0) / temps.length : 0
+  if (!chartData.hasData.value || chartData.chartData.value.length === 0) {
+    const temps = vehicles.value.map(v => v.temperature).filter(t => t != null)
+    return temps.length > 0 ? temps.reduce((a, b) => a + b, 0) / temps.length : 0
+  }
+  
+  // Получаем среднюю температуру из данных графиков
+  const allTemps = []
+  chartData.chartData.value.forEach(vehicle => {
+    vehicle.data.forEach(point => {
+      if (point.temperature != null) allTemps.push(point.temperature)
+    })
+  })
+  return allTemps.length > 0 ? allTemps.reduce((a, b) => a + b, 0) / allTemps.length : 0
 })
 
-// Функции
-const refreshData = async () => {
-  await api.fetchTelemetry()
-  console.log('Analytics: Данные обновлены')
-}
+// Данные для графиков
+const speedChartData = computed(() => chartData.getChartSeries('speed'))
+const temperatureChartData = computed(() => chartData.getChartSeries('temperature'))
+const batteryChartData = computed(() => chartData.getChartSeries('battery'))
+const rpmChartData = computed(() => chartData.getChartSeries('rpm'))
 
+// Инициализация
 onMounted(async () => {
-  console.log('Analytics: Страница загружена')
-  console.log('Analytics: API статус:', api.isConnected.value)
-  console.log('Analytics: API данные:', api.allVehicles.value)
+  console.log('Analytics: Страница с ECharts загружена')
   
   // Подключаемся к API если не подключены
   if (!api.isConnected.value) {
-    console.log('Analytics: Подключаемся к API...')
     await api.initialize()
   }
   
-  // Ждем немного для получения данных (только в браузере)
-  if (process.client) {
-    setTimeout(() => {
-      console.log('Analytics: Данные после подключения:', api.allVehicles.value)
-    }, 2000)
-  }
+  // Загружаем начальные данные графиков
+  await chartData.fetchChartData()
+  
+  // Запускаем автоматическое обновление
+  chartData.startAutoUpdate()
 })
 
 // Метаданные страницы
 useHead({
-  title: 'Аналитика - Fleet Monitor',
+  title: 'Аналитика ECharts - Fleet Monitor',
   meta: [
-    { name: 'description', content: 'Аналитика и статистика техники в реальном времени' }
+    { name: 'description', content: 'Интерактивные графики телеметрии с поддержкой масштабирования' }
   ]
 })
 </script> 
