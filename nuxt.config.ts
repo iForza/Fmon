@@ -46,13 +46,7 @@
     }
   },
 
-  // Серверные маршруты для API
-  serverHandlers: [
-    {
-      route: '/api/**',
-      handler: '~/server/api/[...].ts'
-    }
-  ],
+
 
   // Совместимость
   compatibilityDate: '2025-06-14'
