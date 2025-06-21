@@ -2,13 +2,13 @@
   devtools: { enabled: true },
   
   modules: [
-    '@nuxt/ui'
+    '@nuxt/ui',
+    '@nuxt/icon'
   ],
 
   // Настройки UI с темной темой по умолчанию
   ui: {
-    global: true,
-    icons: ['heroicons']
+    global: true
   },
 
   // Конфигурация приложения
@@ -26,6 +26,17 @@
   colorMode: {
     preference: 'dark',
     fallback: 'dark'
+  },
+
+  // Прокси для API запросов
+  nitro: {
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:3001/api',
+        changeOrigin: true,
+        prependPath: true
+      }
+    }
   },
 
   // Совместимость

@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, readonly } from 'vue'
 
 export const useTime = () => {
   const isClient = ref(false)
@@ -17,6 +17,12 @@ export const useTime = () => {
     
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date
+      
+      // Проверяем валидность даты
+      if (isNaN(dateObj.getTime())) {
+        return 'N/A'
+      }
+      
       return new Intl.DateTimeFormat('ru-RU', {
         hour: '2-digit',
         minute: '2-digit',
@@ -34,6 +40,12 @@ export const useTime = () => {
     
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date
+      
+      // Проверяем валидность даты
+      if (isNaN(dateObj.getTime())) {
+        return 'N/A'
+      }
+      
       const now = currentTime.value
       const diffMs = now.getTime() - dateObj.getTime()
       const diffSeconds = Math.floor(diffMs / 1000)
@@ -61,6 +73,12 @@ export const useTime = () => {
     
     try {
       const dateObj = typeof lastUpdate === 'string' ? new Date(lastUpdate) : lastUpdate
+      
+      // Проверяем валидность даты
+      if (isNaN(dateObj.getTime())) {
+        return 'unknown'
+      }
+      
       const now = currentTime.value
       const diffMs = now.getTime() - dateObj.getTime()
       
