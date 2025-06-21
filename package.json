@@ -11,11 +11,15 @@
     "preview": "nuxt preview"
   },
   "dependencies": {
+    "@fastify/cors": "^11.0.1",
     "@nuxt/icon": "^1.5.5",
     "@nuxt/ui": "^2.22.0",
     "apexcharts": "^4.7.0",
+    "better-sqlite3": "^11.10.0",
     "echarts": "^5.5.0",
+    "fastify": "^5.4.0",
     "maplibre-gl": "^5.6.0",
+    "mqtt": "^5.13.1",
     "nuxt": "^3.13.0",
     "vue": "^3.5.12",
     "vue3-apexcharts": "^1.8.0"
