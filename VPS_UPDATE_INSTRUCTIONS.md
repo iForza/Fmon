@@ -86,7 +86,9 @@ ls -la .output
 ```
 
 ### 8. Обновление PM2 конфигурации
-Создайте файл `ecosystem.config.js`:
+Создайте файл `ecosystem.config.js` в две части:
+
+**Часть 1 - Создание начала файла:**
 ```bash
 cat > ecosystem.config.js << 'EOF'
 module.exports = {
@@ -107,6 +109,12 @@ module.exports = {
       log_file: './logs/mapmon-combined.log',
       time: true
     },
+EOF
+```
+
+**Часть 2 - Добавление остальных приложений:**
+```bash
+cat >> ecosystem.config.js << 'EOF'
     {
       name: 'mapmon-api',
       script: 'server-backup/api-server.cjs',
