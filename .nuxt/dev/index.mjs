@@ -3,40 +3,40 @@ import { Server } from 'node:http';
 import { resolve, dirname, join } from 'node:path';
 import nodeCrypto from 'node:crypto';
 import { parentPort, threadId } from 'node:worker_threads';
-import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, getRequestURL, getResponseHeader, getResponseStatus, createError, getQuery as getQuery$1, readBody, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getRouterParam, getResponseStatusText } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/h3/dist/index.mjs';
-import { escapeHtml } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/@vue/shared/dist/shared.cjs.js';
-import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/vue-bundle-renderer/dist/runtime.mjs';
-import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, joinRelativeURL } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/ufo/dist/index.mjs';
-import { renderToString } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/vue/server-renderer/index.mjs';
-import { klona } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/klona/dist/index.mjs';
-import defu, { defuFn } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/defu/dist/defu.mjs';
-import destr, { destr as destr$1 } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/destr/dist/index.mjs';
-import { snakeCase } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/scule/dist/index.mjs';
-import { createHead as createHead$1, propsToString, renderSSRHead } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/unhead/dist/server.mjs';
-import { stringify, uneval } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/devalue/index.js';
-import { isVNode, toValue, isRef } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/vue/index.mjs';
-import { DeprecationsPlugin, PromisesPlugin, TemplateParamsPlugin, AliasSortingPlugin } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/unhead/dist/plugins.mjs';
-import { createHooks } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/hookable/dist/index.mjs';
-import { createFetch, Headers as Headers$1 } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/ofetch/dist/node.mjs';
-import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/node-mock-http/dist/index.mjs';
-import { createStorage, prefixStorage } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/unstorage/dist/index.mjs';
-import unstorage_47drivers_47fs from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/unstorage/drivers/fs.mjs';
-import { digest, hash as hash$1 } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/ohash/dist/index.mjs';
-import { toRouteMatcher, createRouter } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/radix3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, getRequestURL, getResponseHeader, getResponseStatus, createError, getQuery as getQuery$1, readBody, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getRouterParam, getResponseStatusText } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/h3/dist/index.mjs';
+import { escapeHtml } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/@vue/shared/dist/shared.cjs.js';
+import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/vue-bundle-renderer/dist/runtime.mjs';
+import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, joinRelativeURL } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/ufo/dist/index.mjs';
+import { renderToString } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/vue/server-renderer/index.mjs';
+import { klona } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/klona/dist/index.mjs';
+import defu, { defuFn } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/defu/dist/defu.mjs';
+import destr, { destr as destr$1 } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/destr/dist/index.mjs';
+import { snakeCase } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/scule/dist/index.mjs';
+import { createHead as createHead$1, propsToString, renderSSRHead } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/unhead/dist/server.mjs';
+import { stringify, uneval } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/devalue/index.js';
+import { isVNode, toValue, isRef } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/vue/index.mjs';
+import { DeprecationsPlugin, PromisesPlugin, TemplateParamsPlugin, AliasSortingPlugin } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/unhead/dist/plugins.mjs';
+import { createHooks } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/hookable/dist/index.mjs';
+import { createFetch, Headers as Headers$1 } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/ofetch/dist/node.mjs';
+import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/node-mock-http/dist/index.mjs';
+import { createStorage, prefixStorage } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/unstorage/dist/index.mjs';
+import unstorage_47drivers_47fs from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/unstorage/drivers/fs.mjs';
+import { digest, hash as hash$1 } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/ohash/dist/index.mjs';
+import { toRouteMatcher, createRouter } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/radix3/dist/index.mjs';
 import { readFile } from 'node:fs/promises';
-import consola, { consola as consola$1 } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/consola/dist/index.mjs';
-import { ErrorParser } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/youch-core/build/index.js';
-import { Youch } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/youch/build/index.js';
-import { SourceMapConsumer } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/source-map/source-map.js';
+import consola, { consola as consola$1 } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/consola/dist/index.mjs';
+import { ErrorParser } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/youch-core/build/index.js';
+import { Youch } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/youch/build/index.js';
+import { SourceMapConsumer } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/source-map/source-map.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { getContext } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/unctx/dist/index.mjs';
-import { captureRawStackTrace, parseRawStackTrace } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/errx/dist/index.js';
-import { basename } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/pathe/dist/index.mjs';
-import { getIcons } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/@iconify/utils/lib/index.mjs';
-import { collections } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/.nuxt/nuxt-icon-server-bundle.mjs';
-import { walkResolver } from 'file://C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/unhead/dist/utils.mjs';
+import { getContext } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/unctx/dist/index.mjs';
+import { captureRawStackTrace, parseRawStackTrace } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/errx/dist/index.js';
+import { basename } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/pathe/dist/index.mjs';
+import { getIcons } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/@iconify/utils/lib/index.mjs';
+import { collections } from 'file://C:/Users/user/Desktop/MapMon0.5v/.nuxt/nuxt-icon-server-bundle.mjs';
+import { walkResolver } from 'file://C:/Users/user/Desktop/MapMon0.5v/node_modules/unhead/dist/utils.mjs';
 
-const serverAssets = [{"baseName":"server","dir":"C:/Users/user/Desktop/MapMon-backup-0.4v/server/assets"}];
+const serverAssets = [{"baseName":"server","dir":"C:/Users/user/Desktop/MapMon0.5v/server/assets"}];
 
 const assets = createStorage();
 
@@ -48,11 +48,11 @@ const storage = createStorage({});
 
 storage.mount('/assets', assets);
 
-storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/Users/user/Desktop/MapMon-backup-0.4v","watchOptions":{"ignored":[null]}}));
-storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/Users/user/Desktop/MapMon-backup-0.4v/server","watchOptions":{"ignored":[null]}}));
-storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/Users/user/Desktop/MapMon-backup-0.4v/.nuxt"}));
-storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/Users/user/Desktop/MapMon-backup-0.4v/.nuxt/cache"}));
-storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"C:/Users/user/Desktop/MapMon-backup-0.4v/.data/kv"}));
+storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/Users/user/Desktop/MapMon0.5v","watchOptions":{"ignored":[null]}}));
+storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/Users/user/Desktop/MapMon0.5v/server","watchOptions":{"ignored":[null]}}));
+storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/Users/user/Desktop/MapMon0.5v/.nuxt"}));
+storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/Users/user/Desktop/MapMon0.5v/.nuxt/cache"}));
+storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"C:/Users/user/Desktop/MapMon0.5v/.data/kv"}));
 
 function useStorage(base = "") {
   return base ? prefixStorage(storage, base) : storage;
@@ -1235,13 +1235,13 @@ if (!window.__NUXT_DEVTOOLS_TIME_METRIC__) {
 window.__NUXT_DEVTOOLS_TIME_METRIC__.appInit = Date.now()
 `;
 
-const _e5ZJIxz2g1wQ2NPRP9lA0y0tahk3TOuF_lyBgBxzU = (function(nitro) {
+const _sfquuh3tNSH_zM4JHELTVTqfzCnDfwbfEtetSQCw0U = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script$1}<\/script>`);
   });
 });
 
-const rootDir = "C:/Users/user/Desktop/MapMon-backup-0.4v";
+const rootDir = "C:/Users/user/Desktop/MapMon0.5v";
 
 const appHead = {"meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1"}],"link":[],"style":[],"script":[],"noscript":[],"title":"Fleet Monitor - Мониторинг техники"};
 
@@ -1260,7 +1260,7 @@ const devReducers = {
   URL: (data) => data instanceof URL ? data.toString() : void 0
 };
 const asyncContext = getContext("nuxt-dev", { asyncContext: true, AsyncLocalStorage });
-const _A0ZuP1spfPqX0CFzc1ydP3iNuhgfUPXB0fAZtRrcuzI = (nitroApp) => {
+const _vD_8HyYihinu3eFCKir8V6cjh20DOrt9a2C_edAoBGI = (nitroApp) => {
   const handler = nitroApp.h3App.handler;
   nitroApp.h3App.handler = (event) => {
     return asyncContext.callAsync({ logs: [], event }, () => handler(event));
@@ -1331,16 +1331,16 @@ function onConsoleLog(callback) {
 
 const script = "\"use strict\";(()=>{const t=window,e=document.documentElement,c=[\"dark\",\"light\"],n=getStorageValue(\"localStorage\",\"nuxt-color-mode\")||\"dark\";let i=n===\"system\"?u():n;const r=e.getAttribute(\"data-color-mode-forced\");r&&(i=r),l(i),t[\"__NUXT_COLOR_MODE__\"]={preference:n,value:i,getColorScheme:u,addColorScheme:l,removeColorScheme:d};function l(o){const s=\"\"+o+\"\",a=\"\";e.classList?e.classList.add(s):e.className+=\" \"+s,a&&e.setAttribute(\"data-\"+a,o)}function d(o){const s=\"\"+o+\"\",a=\"\";e.classList?e.classList.remove(s):e.className=e.className.replace(new RegExp(s,\"g\"),\"\"),a&&e.removeAttribute(\"data-\"+a)}function f(o){return t.matchMedia(\"(prefers-color-scheme\"+o+\")\")}function u(){if(t.matchMedia&&f(\"\").media!==\"not all\"){for(const o of c)if(f(\":\"+o).matches)return o}return\"dark\"}})();function getStorageValue(t,e){switch(t){case\"localStorage\":return window.localStorage.getItem(e);case\"sessionStorage\":return window.sessionStorage.getItem(e);case\"cookie\":return getCookie(e);default:return null}}function getCookie(t){const c=(\"; \"+window.document.cookie).split(\"; \"+t+\"=\");if(c.length===2)return c.pop()?.split(\";\").shift()}";
 
-const _dIkkCoqNPpGFCEGm4MbGv83UWTKnSdKHOlCwZo2k9M = (function(nitro) {
+const _IJ_tqbik_t2ncUoMJxMoIG2BYdlSIXk3wLSjFdm3UlE = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script}<\/script>`);
   });
 });
 
 const plugins = [
-  _e5ZJIxz2g1wQ2NPRP9lA0y0tahk3TOuF_lyBgBxzU,
-_A0ZuP1spfPqX0CFzc1ydP3iNuhgfUPXB0fAZtRrcuzI,
-_dIkkCoqNPpGFCEGm4MbGv83UWTKnSdKHOlCwZo2k9M
+  _sfquuh3tNSH_zM4JHELTVTqfzCnDfwbfEtetSQCw0U,
+_vD_8HyYihinu3eFCKir8V6cjh20DOrt9a2C_edAoBGI,
+_IJ_tqbik_t2ncUoMJxMoIG2BYdlSIXk3wLSjFdm3UlE
 ];
 
 function defineRenderHandler(render) {
@@ -1433,7 +1433,7 @@ function publicAssetsURL(...path) {
 
 const warnOnceSet = /* @__PURE__ */ new Set();
 const DEFAULT_ENDPOINT = "https://api.iconify.design";
-const _AelEgu = defineCachedEventHandler(async (event) => {
+const _zBGjXz = defineCachedEventHandler(async (event) => {
   const url = getRequestURL(event);
   if (!url)
     return createError({ status: 400, message: "Invalid icon request" });
@@ -1550,8 +1550,8 @@ function setSSRError(ssrContext, error) {
 
 const APP_ROOT_OPEN_TAG = `<${appRootTag}${propsToString(appRootAttrs)}>`;
 const APP_ROOT_CLOSE_TAG = `</${appRootTag}>`;
-const getServerEntry = () => import('file://C:/Users/user/Desktop/MapMon-backup-0.4v/.nuxt/dist/server/server.mjs').then((r) => r.default || r);
-const getClientManifest = () => import('file://C:/Users/user/Desktop/MapMon-backup-0.4v/.nuxt/dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
+const getServerEntry = () => import('file://C:/Users/user/Desktop/MapMon0.5v/.nuxt/dist/server/server.mjs').then((r) => r.default || r);
+const getClientManifest = () => import('file://C:/Users/user/Desktop/MapMon0.5v/.nuxt/dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
 const getSSRRenderer = lazyCachedFunction(async () => {
   const manifest = await getClientManifest();
   if (!manifest) {
@@ -1797,13 +1797,13 @@ async function getIslandContext(event) {
   return ctx;
 }
 
-const _lazy_12dGAM = () => Promise.resolve().then(function () { return renderer$1; });
+const _lazy_e_pQcX = () => Promise.resolve().then(function () { return renderer$1; });
 
 const handlers = [
-  { route: '/__nuxt_error', handler: _lazy_12dGAM, lazy: true, middleware: false, method: undefined },
-  { route: '/api/_nuxt_icon/:collection', handler: _AelEgu, lazy: false, middleware: false, method: undefined },
+  { route: '/__nuxt_error', handler: _lazy_e_pQcX, lazy: true, middleware: false, method: undefined },
+  { route: '/api/_nuxt_icon/:collection', handler: _zBGjXz, lazy: false, middleware: false, method: undefined },
   { route: '/__nuxt_island/**', handler: _SxA8c9, lazy: false, middleware: false, method: undefined },
-  { route: '/**', handler: _lazy_12dGAM, lazy: true, middleware: false, method: undefined }
+  { route: '/**', handler: _lazy_e_pQcX, lazy: true, middleware: false, method: undefined }
 ];
 
 function createNitroApp() {

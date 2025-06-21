@@ -1,1 +1,1 @@
-export { default } from "file:///C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/@nuxt/vite-builder/dist/runtime/vite-node.mjs"
+export { default } from "file:///C:/Users/user/Desktop/MapMon0.5v/node_modules/@nuxt/vite-builder/dist/runtime/vite-node.mjs"

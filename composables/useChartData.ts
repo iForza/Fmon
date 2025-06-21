@@ -1,4 +1,4 @@
-import { ref, computed, onUnmounted, getCurrentInstance } from 'vue'
+import { ref, computed, onUnmounted, readonly, getCurrentInstance } from 'vue'
 
 export interface ChartDataPoint {
   timestamp: number

@@ -298,7 +298,23 @@ const addEquipmentMarkers = () => {
   markers.value.forEach(marker => marker.remove())
   markers.value.clear()
 
-  props.vehicles.forEach(equipment => {
+  // Валидация и фильтрация техники с корректными координатами
+  const validVehicles = props.vehicles.filter(equipment => {
+    // Проверяем что координаты являются числами и не NaN
+    const hasValidLat = typeof equipment.lat === 'number' && !isNaN(equipment.lat) && isFinite(equipment.lat)
+    const hasValidLng = typeof equipment.lng === 'number' && !isNaN(equipment.lng) && isFinite(equipment.lng)
+    
+    if (!hasValidLat || !hasValidLng) {
+      console.warn(`⚠️ Техника ${equipment.id} имеет некорректные координаты:`, { lat: equipment.lat, lng: equipment.lng })
+      return false
+    }
+    
+    return true
+  })
+
+  console.log(`🗺️ Добавление ${validVehicles.length} маркеров техники из ${props.vehicles.length} всего`)
+
+  validVehicles.forEach(equipment => {
     // Определение цвета и иконки в зависимости от типа техники
     const getVehicleStyle = (vehicle: Vehicle) => {
       const name = vehicle.name.toLowerCase()
@@ -412,7 +428,7 @@ const addEquipmentMarkers = () => {
     marker.setPopup(popup)
   })
 
-  equipmentCount.value = props.vehicles.length
+  equipmentCount.value = validVehicles.length
 }
 
 // Центрирование на технике

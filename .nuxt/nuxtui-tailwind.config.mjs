@@ -1,6 +1,6 @@
 
       import { defaultExtractor as createDefaultExtractor } from "tailwindcss/lib/lib/defaultExtractor.js";
-      import { customSafelistExtractor, generateSafelist } from "C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/@nuxt/ui/dist/runtime/utils/colors";
+      import { customSafelistExtractor, generateSafelist } from "C:/Users/user/Desktop/MapMon0.5v/node_modules/@nuxt/ui/dist/runtime/utils/colors";
       import formsPlugin from "@tailwindcss/forms";
       import aspectRatio from "@tailwindcss/aspect-ratio";
       import typography from "@tailwindcss/typography";
@@ -19,8 +19,8 @@
         ],
         content: {
           files: [
-            "C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/@nuxt/ui/dist/runtime/components/**/*.{vue,mjs,ts}",
-            "C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/@nuxt/ui/dist/runtime/ui.config/**/*.{mjs,js,ts}"
+            "C:/Users/user/Desktop/MapMon0.5v/node_modules/@nuxt/ui/dist/runtime/components/**/*.{vue,mjs,ts}",
+            "C:/Users/user/Desktop/MapMon0.5v/node_modules/@nuxt/ui/dist/runtime/ui.config/**/*.{mjs,js,ts}"
           ],
           transform: {
             vue: (content) => {

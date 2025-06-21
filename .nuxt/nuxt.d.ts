@@ -1,5 +1,6 @@
 /// <reference types="@nuxt/ui" />
 /// <reference types="@nuxt/devtools" />
+/// <reference types="@nuxt/icon" />
 /// <reference types="@nuxt/telemetry" />
 /// <reference path="types/builder-env.d.ts" />
 /// <reference types="nuxt" />

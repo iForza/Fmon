@@ -7,12 +7,12 @@
     "module": true,
     "resourceType": "script"
   },
-  "C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/nuxt/dist/app/entry.js": {
+  "C:/Users/user/Desktop/MapMon0.5v/node_modules/nuxt/dist/app/entry.js": {
     "resourceType": "script",
     "module": true,
     "prefetch": true,
     "preload": true,
     "isEntry": true,
-    "file": "C:/Users/user/Desktop/MapMon-backup-0.4v/node_modules/nuxt/dist/app/entry.js"
+    "file": "C:/Users/user/Desktop/MapMon0.5v/node_modules/nuxt/dist/app/entry.js"
   }
 }

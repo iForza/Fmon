@@ -12,9 +12,12 @@ type HydrationStrategies = {
 }
 type LazyComponent<T> = (T & DefineComponent<HydrationStrategies, {}, {}, {}, {}, {}, {}, { hydrated: () => void }>)
 interface _GlobalComponents {
-      'AppHeader': typeof import("../components/AppHeader.vue")['default']
+      'AdminPanel': typeof import("../components/AdminPanel.vue")['default']
+    'AppHeader': typeof import("../components/AppHeader.vue")['default']
+    'ChartComponent': typeof import("../components/ChartComponent.vue")['default']
     'MapComponent': typeof import("../components/MapComponent.vue")['default']
     'MapComponentFree': typeof import("../components/MapComponentFree.vue")['default']
+    'SettingsModal': typeof import("../components/SettingsModal.vue")['default']
     'UAccordion': typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Accordion.vue")['default']
     'UAlert': typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Alert.vue")['default']
     'UAvatar': typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Avatar.vue")['default']
@@ -92,9 +95,12 @@ interface _GlobalComponents {
     'UModals': IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
     'USlideovers': IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
     'NuxtRouteAnnouncer': IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
-      'LazyAppHeader': LazyComponent<typeof import("../components/AppHeader.vue")['default']>
+      'LazyAdminPanel': LazyComponent<typeof import("../components/AdminPanel.vue")['default']>
+    'LazyAppHeader': LazyComponent<typeof import("../components/AppHeader.vue")['default']>
+    'LazyChartComponent': LazyComponent<typeof import("../components/ChartComponent.vue")['default']>
     'LazyMapComponent': LazyComponent<typeof import("../components/MapComponent.vue")['default']>
     'LazyMapComponentFree': LazyComponent<typeof import("../components/MapComponentFree.vue")['default']>
+    'LazySettingsModal': LazyComponent<typeof import("../components/SettingsModal.vue")['default']>
     'LazyUAccordion': LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Accordion.vue")['default']>
     'LazyUAlert': LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Alert.vue")['default']>
     'LazyUAvatar': LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Avatar.vue")['default']>
@@ -178,9 +184,12 @@ declare module 'vue' {
   export interface GlobalComponents extends _GlobalComponents { }
 }
 
+export const AdminPanel: typeof import("../components/AdminPanel.vue")['default']
 export const AppHeader: typeof import("../components/AppHeader.vue")['default']
+export const ChartComponent: typeof import("../components/ChartComponent.vue")['default']
 export const MapComponent: typeof import("../components/MapComponent.vue")['default']
 export const MapComponentFree: typeof import("../components/MapComponentFree.vue")['default']
+export const SettingsModal: typeof import("../components/SettingsModal.vue")['default']
 export const UAccordion: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Accordion.vue")['default']
 export const UAlert: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Alert.vue")['default']
 export const UAvatar: typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Avatar.vue")['default']
@@ -258,9 +267,12 @@ export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components
 export const UModals: IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
 export const USlideovers: IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
 export const NuxtRouteAnnouncer: IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
+export const LazyAdminPanel: LazyComponent<typeof import("../components/AdminPanel.vue")['default']>
 export const LazyAppHeader: LazyComponent<typeof import("../components/AppHeader.vue")['default']>
+export const LazyChartComponent: LazyComponent<typeof import("../components/ChartComponent.vue")['default']>
 export const LazyMapComponent: LazyComponent<typeof import("../components/MapComponent.vue")['default']>
 export const LazyMapComponentFree: LazyComponent<typeof import("../components/MapComponentFree.vue")['default']>
+export const LazySettingsModal: LazyComponent<typeof import("../components/SettingsModal.vue")['default']>
 export const LazyUAccordion: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Accordion.vue")['default']>
 export const LazyUAlert: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Alert.vue")['default']>
 export const LazyUAvatar: LazyComponent<typeof import("../node_modules/@nuxt/ui/dist/runtime/components/elements/Avatar.vue")['default']>

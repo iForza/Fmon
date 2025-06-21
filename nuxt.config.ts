@@ -31,7 +31,11 @@
   // Настройки иконок
   icon: {
     serverBundle: {
-      collections: ['heroicons']
+      collections: ['heroicons', 'mdi', 'tabler']
+    },
+    clientBundle: {
+      scan: true,
+      sizeLimitKb: 256
     }
   },
 
@@ -45,8 +49,6 @@
       }
     }
   },
-
-
 
   // Совместимость
   compatibilityDate: '2025-06-14'
