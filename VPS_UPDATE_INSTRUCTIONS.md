@@ -86,6 +86,54 @@ ls -la .output
 ```
 
 ### 8. Обновление PM2 конфигурации
+
+**Способ 1 - Одной командой (рекомендуется):**
+```bash
+# Создание ecosystem.config.js одной командой
+cat > ecosystem.config.js << 'ECOSYSTEM_EOF'
+module.exports = {
+  apps: [
+    {
+      name: 'mapmon',
+      script: '.output/server/index.mjs',
+      cwd: '/var/www/mapmon',
+      instances: 1,
+      exec_mode: 'cluster',
+      env: { NODE_ENV: 'production', NITRO_PORT: 3000, NITRO_HOST: '0.0.0.0' },
+      error_file: './logs/mapmon-error.log',
+      out_file: './logs/mapmon-out.log',
+      log_file: './logs/mapmon-combined.log',
+      time: true
+    },
+    {
+      name: 'mapmon-api',
+      script: 'server-backup/api-server.cjs',
+      cwd: '/var/www/mapmon',
+      instances: 1,
+      env: { NODE_ENV: 'production' },
+      error_file: './logs/api-error.log',
+      out_file: './logs/api-out.log',
+      log_file: './logs/api-combined.log',
+      time: true
+    },
+    {
+      name: 'mqtt-collector',
+      script: 'server-backup/mqtt-collector.cjs',
+      cwd: '/var/www/mapmon',
+      instances: 1,
+      env: { NODE_ENV: 'production' },
+      error_file: './logs/mqtt-error.log',
+      out_file: './logs/mqtt-out.log',
+      log_file: './logs/mqtt-combined.log',
+      time: true
+    }
+  ]
+}
+ECOSYSTEM_EOF
+```
+
+**Способ 2 - По частям (если команда слишком длинная):**
+
 Создайте файл `ecosystem.config.js` в две части:
 
 **Часть 1 - Создание начала файла:**
@@ -144,6 +192,14 @@ cat >> ecosystem.config.js << 'EOF'
   ]
 }
 EOF
+```
+
+**Способ 3 - Ручное создание процессов (альтернатива):**
+```bash
+# Если не хотите создавать ecosystem.config.js, можно запустить процессы отдельно:
+pm2 start .output/server/index.mjs --name "mapmon" --log ./logs/mapmon-combined.log
+pm2 start server-backup/api-server.cjs --name "mapmon-api" --log ./logs/api-combined.log  
+pm2 start server-backup/mqtt-collector.cjs --name "mqtt-collector" --log ./logs/mqtt-combined.log
 ```
 
 ### 9. Создание папки для логов
