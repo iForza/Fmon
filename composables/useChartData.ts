@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted, getCurrentInstance } from 'vue'
 
 export interface ChartDataPoint {
   timestamp: number
@@ -281,12 +281,15 @@ export const useChartData = () => {
       }
     }, 5000)
 
-    // Очистка интервала при размонтировании
-    onUnmounted(() => {
-      clearInterval(interval)
-    })
+    // Очистка интервала при размонтировании (только если есть активный компонент)
+    if (getCurrentInstance()) {
+      onUnmounted(() => {
+        clearInterval(interval)
+      })
+    }
 
-    return interval
+    // Возвращаем функцию для ручной очистки
+    return () => clearInterval(interval)
   }
 
   // Очистка устаревших данных из кеша

@@ -28,6 +28,13 @@
     fallback: 'dark'
   },
 
+  // Настройки иконок
+  icon: {
+    serverBundle: {
+      collections: ['heroicons']
+    }
+  },
+
   // Прокси для API запросов
   nitro: {
     devProxy: {
@@ -38,6 +45,14 @@
       }
     }
   },
+
+  // Серверные маршруты для API
+  serverHandlers: [
+    {
+      route: '/api/**',
+      handler: '~/server/api/[...].ts'
+    }
+  ],
 
   // Совместимость
   compatibilityDate: '2025-06-14'

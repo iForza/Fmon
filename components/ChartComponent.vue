@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick, getCurrentInstance } from 'vue'
 
 // Пропсы
 const props = defineProps({
@@ -313,13 +313,15 @@ const initChart = () => {
     window.addEventListener('resize', resizeHandler)
     
     // Очистка при размонтировании
-    onUnmounted(() => {
-      window.removeEventListener('resize', resizeHandler)
-      if (chartInstance) {
-        chartInstance.dispose()
-        chartInstance = null
-      }
-    })
+    if (getCurrentInstance()) {
+      onUnmounted(() => {
+        window.removeEventListener('resize', resizeHandler)
+        if (chartInstance) {
+          chartInstance.dispose()
+          chartInstance = null
+        }
+      })
+    }
     
   } catch (error) {
     console.error('Ошибка инициализации графика:', error)

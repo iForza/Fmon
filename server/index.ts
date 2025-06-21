@@ -399,69 +399,61 @@ const start = async () => {
   }
 }
 
-// API для настроек MQTT
+// MQTT настройки API endpoints
 fastify.get('/api/mqtt/status', async (request, reply) => {
   try {
-    // Здесь можно проверить статус MQTT коллектора через PM2 или другим способом
+    // Проверяем статус MQTT подключения (заглушка)
     return {
       success: true,
-      connected: true, // Временно возвращаем true
-      lastMessage: new Date().toISOString(),
-      activeDevices: vehicles.size
+      connected: false,
+      lastMessage: null,
+      activeDevices: 0,
+      message: 'MQTT коллектор работает отдельно'
     }
-  } catch (error: any) {
+  } catch (error) {
+    console.error('MQTT status error:', error)
     reply.status(500)
-    return { success: false, error: error.message }
+    return {
+      success: false,
+      error: 'Ошибка получения статуса MQTT'
+    }
   }
 })
 
 fastify.post('/api/mqtt/config', async (request, reply) => {
   try {
-    const config = request.body as any
-    
-    // Здесь можно сохранить конфигурацию MQTT и перезапустить коллектор
-    console.log('📋 Получена новая конфигурация MQTT:', config)
+    const config = request.body
+    // Сохраняем конфигурацию MQTT (заглушка)
+    console.log('MQTT config received:', config)
     
     return {
       success: true,
-      message: 'Конфигурация MQTT сохранена'
+      message: 'Настройки MQTT сохранены'
     }
-  } catch (error: any) {
+  } catch (error) {
+    console.error('MQTT config error:', error)
     reply.status(500)
-    return { success: false, error: error.message }
-  }
-})
-
-fastify.post('/api/mqtt/test', async (request, reply) => {
-  try {
-    const config = request.body as any
-    
-    // Здесь можно протестировать подключение к MQTT
-    console.log('🧪 Тестирование MQTT подключения:', config.url)
-    
-    // Симулируем успешное тестирование
     return {
-      success: true,
-      message: 'Подключение к MQTT брокеру успешно'
+      success: false,
+      error: 'Ошибка сохранения настроек MQTT'
     }
-  } catch (error: any) {
-    reply.status(500)
-    return { success: false, error: error.message }
   }
 })
 
 fastify.post('/api/mqtt/restart', async (request, reply) => {
   try {
-    // Здесь можно перезапустить MQTT коллектор через PM2
-    console.log('🔄 Перезапуск MQTT коллектора')
-    
+    // Перезапуск MQTT подключения (заглушка)
     return {
       success: true,
-      message: 'MQTT коллектор перезапущен'
+      message: 'MQTT подключение перезапущено'
     }
-  } catch (error: any) {
+  } catch (error) {
+    console.error('MQTT restart error:', error)
     reply.status(500)
-    return { success: false, error: error.message }
+    return {
+      success: false,
+      error: 'Ошибка перезапуска MQTT'
+    }
   }
 })
 

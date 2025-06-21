@@ -1,3 +1,5 @@
+import { ref, computed, onUnmounted, getCurrentInstance } from 'vue'
+
 // API клиент для работы с серверными данными вместо браузерного MQTT
 interface VehicleData {
   id: string
@@ -197,11 +199,19 @@ export const useApi = () => {
       }
     }, 5000)
 
-    // Очистка при размонтировании компонента
-    onUnmounted(() => {
+    // Очистка при размонтировании компонента (только если есть активный компонент)
+    if (getCurrentInstance()) {
+      onUnmounted(() => {
+        clearInterval(pollInterval)
+        disconnectWebSocket()
+      })
+    }
+
+    // Возвращаем функцию для ручной очистки
+    return () => {
       clearInterval(pollInterval)
       disconnectWebSocket()
-    })
+    }
   }
 
   // Вычисляемые свойства
