@@ -105,20 +105,29 @@
                       </div>
                     </div>
                     
-                    <div class="text-sm text-gray-400">
-                      Скорость: {{ vehicle.speed }} км/ч
-                    </div>
-                    
-                    <!-- Дополнительная информация -->
-                    <div v-if="vehicle.battery || vehicle.temperature || vehicle.rpm" class="text-xs text-gray-500 mt-1 space-y-1">
-                      <div v-if="vehicle.battery" class="flex items-center">
-                        🔋 {{ vehicle.battery.toFixed(1) }}%
+                    <!-- Основные параметры -->
+                    <div class="grid grid-cols-2 gap-2 text-xs mt-2">
+                      <div class="bg-gray-600 rounded px-2 py-1">
+                        <div class="text-gray-400">Скорость</div>
+                        <div class="text-white font-medium">{{ vehicle.speed || 0 }} км/ч</div>
                       </div>
-                      <div v-if="vehicle.temperature" class="flex items-center">
-                        🌡️ {{ vehicle.temperature.toFixed(1) }}°C
+                      <div class="bg-gray-600 rounded px-2 py-1">
+                        <div class="text-gray-400">Батарея</div>
+                        <div class="text-white font-medium">
+                          {{ vehicle.battery ? vehicle.battery.toFixed(1) + '%' : 'N/A' }}
+                        </div>
                       </div>
-                      <div v-if="vehicle.rpm" class="flex items-center">
-                        ⚙️ {{ vehicle.rpm }} RPM
+                      <div class="bg-gray-600 rounded px-2 py-1">
+                        <div class="text-gray-400">Температура</div>
+                        <div class="text-white font-medium">
+                          {{ vehicle.temperature ? vehicle.temperature.toFixed(1) + '°C' : 'N/A' }}
+                        </div>
+                      </div>
+                      <div class="bg-gray-600 rounded px-2 py-1">
+                        <div class="text-gray-400">Обороты</div>
+                        <div class="text-white font-medium">
+                          {{ vehicle.rpm ? vehicle.rpm + ' RPM' : 'N/A' }}
+                        </div>
                       </div>
                     </div>
                     

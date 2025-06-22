@@ -84,6 +84,10 @@ export const useApi = () => {
               lng: item.lng,
               speed: item.speed || 0,
               battery: item.battery,
+              temperature: item.temperature,
+              rpm: item.rpm,
+              // Определяем статус на основе скорости и времени последнего обновления
+              status: (item.speed > 0) ? 'active' : 'stopped',
               timestamp: new Date(item.timestamp),
               lastUpdate: new Date(item.timestamp)
             }
@@ -216,9 +220,20 @@ export const useApi = () => {
 
   // Вычисляемые свойства
   const allVehicles = computed(() => Array.from(vehicles.value.values()))
-  const activeVehicles = computed(() => 
-    allVehicles.value.filter(v => v.status === 'active' || v.speed > 0).length
-  )
+  const activeVehicles = computed(() => {
+    const now = Date.now()
+    return allVehicles.value.filter(v => {
+      // Считаем технику активной если:
+      // 1. Скорость больше 0, ИЛИ
+      // 2. Статус 'active', ИЛИ  
+      // 3. Последнее обновление было менее 30 секунд назад (техника онлайн)
+      const isMoving = v.speed > 0
+      const isActiveStatus = v.status === 'active'
+      const isOnline = v.lastUpdate && (now - new Date(v.lastUpdate).getTime()) < 30000
+      
+      return isMoving || isActiveStatus || isOnline
+    }).length
+  })
 
   return {
     // Состояние
