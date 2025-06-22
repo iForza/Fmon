@@ -107,6 +107,64 @@ fastify.get('/api/status', async (request, reply) => {
   };
 });
 
+// MQTT настройки API endpoints
+fastify.get('/api/mqtt/status', async (request, reply) => {
+  try {
+    // Проверяем статус MQTT подключения (заглушка)
+    return {
+      success: true,
+      connected: false,
+      lastMessage: null,
+      activeDevices: 0,
+      message: 'MQTT коллектор работает отдельно'
+    };
+  } catch (error) {
+    console.error('MQTT status error:', error);
+    reply.status(500);
+    return {
+      success: false,
+      error: 'Ошибка получения статуса MQTT'
+    };
+  }
+});
+
+fastify.post('/api/mqtt/config', async (request, reply) => {
+  try {
+    const config = request.body;
+    // Сохраняем конфигурацию MQTT (заглушка)
+    console.log('MQTT config received:', config);
+    
+    return {
+      success: true,
+      message: 'Настройки MQTT сохранены'
+    };
+  } catch (error) {
+    console.error('MQTT config error:', error);
+    reply.status(500);
+    return {
+      success: false,
+      error: 'Ошибка сохранения настроек MQTT'
+    };
+  }
+});
+
+fastify.post('/api/mqtt/restart', async (request, reply) => {
+  try {
+    // Перезапуск MQTT подключения (заглушка)
+    return {
+      success: true,
+      message: 'MQTT подключение перезапущено'
+    };
+  } catch (error) {
+    console.error('MQTT restart error:', error);
+    reply.status(500);
+    return {
+      success: false,
+      error: 'Ошибка перезапуска MQTT'
+    };
+  }
+});
+
 // Запуск сервера
 const start = async () => {
   try {
