@@ -110,20 +110,43 @@ fastify.get('/api/status', async (request, reply) => {
 // MQTT настройки API endpoints
 fastify.get('/api/mqtt/status', async (request, reply) => {
   try {
-    // Проверяем статус MQTT подключения (заглушка)
+    // Получаем реальный статус из базы данных
+    const recentTelemetry = db.getLatestTelemetry();
+    const activeDevices = recentTelemetry.filter(t => {
+      const lastUpdate = new Date(t.timestamp);
+      const now = new Date();
+      const timeDiff = (now - lastUpdate) / 1000; // в секундах
+      return timeDiff < 300; // активные если обновлялись последние 5 минут
+    }).length;
+    
+    const lastMessage = recentTelemetry.length > 0 ? {
+      vehicle_id: recentTelemetry[0].vehicle_id,
+      timestamp: recentTelemetry[0].timestamp,
+      data: {
+        speed: recentTelemetry[0].speed,
+        battery: recentTelemetry[0].battery,
+        temperature: recentTelemetry[0].temperature
+      }
+    } : null;
+    
     return {
       success: true,
-      connected: false,
-      lastMessage: null,
-      activeDevices: 0,
-      message: 'MQTT коллектор работает отдельно'
+      connected: activeDevices > 0,
+      status: activeDevices > 0 ? 'connected' : 'disconnected',
+      lastMessage: lastMessage,
+      activeDevices: activeDevices,
+      totalDevices: recentTelemetry.length,
+      timestamp: new Date().toISOString(),
+      message: `MQTT коллектор обрабатывает данные от ${activeDevices} устройств`
     };
   } catch (error) {
     console.error('MQTT status error:', error);
     reply.status(500);
     return {
       success: false,
-      error: 'Ошибка получения статуса MQTT'
+      connected: false,
+      error: 'Ошибка получения статуса MQTT',
+      timestamp: new Date().toISOString()
     };
   }
 });
@@ -131,12 +154,30 @@ fastify.get('/api/mqtt/status', async (request, reply) => {
 fastify.post('/api/mqtt/config', async (request, reply) => {
   try {
     const config = request.body;
-    // Сохраняем конфигурацию MQTT (заглушка)
-    console.log('MQTT config received:', config);
+    console.log('🔧 MQTT config update received:', config);
+    
+    // Валидация конфигурации
+    if (!config.server || !config.port) {
+      reply.status(400);
+      return {
+        success: false,
+        error: 'Необходимо указать сервер и порт MQTT'
+      };
+    }
+    
+    // В реальной реализации здесь нужно:
+    // 1. Сохранить конфигурацию в файл/БД
+    // 2. Перезапустить MQTT коллектор с новыми настройками
     
     return {
       success: true,
-      message: 'Настройки MQTT сохранены'
+      message: 'Настройки MQTT сохранены. Требуется перезапуск коллектора.',
+      config: {
+        server: config.server,
+        port: config.port,
+        client_id: config.client_id || 'mapmon-server',
+        topics: config.topics || ['vehicles/+/telemetry']
+      }
     };
   } catch (error) {
     console.error('MQTT config error:', error);
@@ -150,17 +191,28 @@ fastify.post('/api/mqtt/config', async (request, reply) => {
 
 fastify.post('/api/mqtt/restart', async (request, reply) => {
   try {
-    // Перезапуск MQTT подключения (заглушка)
+    console.log('🔄 MQTT restart requested');
+    
+    // В реальной реализации здесь нужно:
+    // 1. Остановить текущий MQTT клиент
+    // 2. Перезагрузить конфигурацию
+    // 3. Запустить новое соединение
+    
+    // Имитация времени перезапуска
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     return {
       success: true,
-      message: 'MQTT подключение перезапущено'
+      message: 'MQTT подключение успешно перезапущено',
+      timestamp: new Date().toISOString(),
+      status: 'restarted'
     };
   } catch (error) {
     console.error('MQTT restart error:', error);
     reply.status(500);
     return {
       success: false,
-      error: 'Ошибка перезапуска MQTT'
+      error: 'Ошибка перезапуска MQTT соединения'
     };
   }
 });

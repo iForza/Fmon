@@ -4,6 +4,7 @@ import fastifyWebsocket from '@fastify/websocket'
 import fastifyCors from '@fastify/cors'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { readFileSync } from 'fs'
 
 // Получаем путь к директории
 const __filename = fileURLToPath(import.meta.url)
@@ -258,60 +259,77 @@ fastify.get('/api/status', async (request, reply) => {
   }
 })
 
-// MQTT настройки API endpoints
+// MQTT API Endpoints - проксируем к реальному MQTT коллектору
 fastify.get('/api/mqtt/status', async (request, reply) => {
   try {
-    // Проверяем статус MQTT подключения (заглушка)
-    return {
-      success: true,
-      connected: false,
-      lastMessage: null,
-      activeDevices: 0,
-      message: 'MQTT коллектор работает отдельно'
+    // Проксируем запрос к реальному API серверу на порт 3001
+    const response = await fetch('http://localhost:3001/api/mqtt/status')
+    if (response.ok) {
+      const data = await response.json()
+      return data
+    } else {
+      throw new Error(`API server returned status ${response.status}`)
     }
   } catch (error) {
-    console.error('MQTT status error:', error)
-    reply.status(500)
+    console.warn('MQTT collector not available:', error.message)
     return {
-      success: false,
-      error: 'Ошибка получения статуса MQTT'
+      connected: false,
+      status: 'disconnected',
+      error: 'MQTT collector service не запущен',
+      timestamp: new Date().toISOString(),
+      activeDevices: 0,
+      lastMessage: null
     }
   }
 })
 
 fastify.post('/api/mqtt/config', async (request, reply) => {
   try {
-    const config = request.body
-    // Сохраняем конфигурацию MQTT (заглушка)
-    console.log('MQTT config received:', config)
+    const response = await fetch('http://localhost:3001/api/mqtt/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(request.body)
+    })
     
-    return {
-      success: true,
-      message: 'Настройки MQTT сохранены'
+    if (response.ok) {
+      const data = await response.json()
+      return data
+    } else {
+      throw new Error(`API server returned status ${response.status}`)
     }
   } catch (error) {
-    console.error('MQTT config error:', error)
+    console.error('MQTT config update failed:', error)
     reply.status(500)
     return {
       success: false,
-      error: 'Ошибка сохранения настроек MQTT'
+      error: 'Не удалось обновить настройки MQTT'
     }
   }
 })
 
 fastify.post('/api/mqtt/restart', async (request, reply) => {
   try {
-    // Перезапуск MQTT подключения (заглушка)
-    return {
-      success: true,
-      message: 'MQTT подключение перезапущено'
+    const response = await fetch('http://localhost:3001/api/mqtt/restart', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      return data
+    } else {
+      throw new Error(`API server returned status ${response.status}`)
     }
   } catch (error) {
-    console.error('MQTT restart error:', error)
+    console.error('MQTT restart failed:', error)
     reply.status(500)
     return {
       success: false,
-      error: 'Ошибка перезапуска MQTT'
+      error: 'Не удалось перезапустить MQTT соединение'
     }
   }
 })

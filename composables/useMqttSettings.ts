@@ -24,14 +24,20 @@ export const useMqttSettings = () => {
   const activeDevices = ref(0)
   const isInitialized = ref(false)
 
-  // Настройки по умолчанию
+  // Настройки по умолчанию (совместимые с ESP32)
   const defaultSettings: MqttSettings = {
-    url: 'wss://o0acf6a7.ala.dedicated.gcp.emqxcloud.com:8084/mqtt',
-    port: '8084',
-    username: 'iforza',
+    url: 'wss://o0acf6a7.ala.dedicated.gcp.emqxcloud.com:8084/mqtt', // WebSocket для браузера
+    port: '8084', // WebSocket port для браузера  
+    username: 'iforza', // Те же учетные данные что у ESP32
     password: 'iforza',
-    clientId: 'mapmon-client-' + Date.now(),
-    topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status']
+    clientId: 'mapmon-web-' + Date.now(),
+    topics: [
+      'car', // Основной топик для совместимости
+      'vehicles/+/telemetry', // Стандартный формат
+      'vehicles/+/status',
+      'esp32/+/telemetry', // Дополнительные форматы ESP32
+      'fleet/+/data' // Альтернативный формат
+    ]
   }
 
   // Ключ для localStorage
