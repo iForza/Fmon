@@ -70,25 +70,38 @@ export const useApi = () => {
       const telemetryData = response.data || []
       
       if (Array.isArray(telemetryData)) {
+        console.log(`📡 Обработка ${telemetryData.length} записей телеметрии`)
+        
         // Обновляем данные техники с новой телеметрией
         telemetryData.forEach(item => {
           if (item.vehicle_id) {
+            console.log(`🔧 Обновление техники ${item.vehicle_id}:`, {
+              lat: item.lat,
+              lng: item.lng, 
+              speed: item.speed,
+              status: (item.speed > 0) ? 'active' : 'stopped',
+              battery: item.battery,
+              temperature: item.temperature
+            })
+            
             const existing = vehicles.value.get(item.vehicle_id) || {
               id: item.vehicle_id,
-              name: item.vehicle_name || `Техника ${item.vehicle_id}`,
-              status: 'active'
+              name: item.vehicle_name || `ESP32 ${item.vehicle_id}`,
+              status: 'stopped'
             }
 
             const updated: VehicleData = {
               ...existing,
-              lat: item.lat,
-              lng: item.lng,
-              speed: item.speed || 0,
-              battery: item.battery,
-              temperature: item.temperature,
-              rpm: item.rpm,
-              // Определяем статус на основе скорости и времени последнего обновления
-              status: (item.speed > 0) ? 'active' : 'stopped',
+              id: item.vehicle_id,
+              name: item.vehicle_name || existing.name,
+              lat: parseFloat(item.lat) || 0,
+              lng: parseFloat(item.lng) || 0,
+              speed: parseFloat(item.speed) || 0,
+              battery: item.battery ? parseFloat(item.battery) : undefined,
+              temperature: item.temperature ? parseFloat(item.temperature) : undefined,
+              rpm: item.rpm ? parseInt(item.rpm) : undefined,
+              // Определяем статус на основе скорости (как делает ESP32)
+              status: (parseFloat(item.speed) || 0) > 0 ? 'active' : 'stopped',
               timestamp: new Date(item.timestamp),
               lastUpdate: new Date(item.timestamp)
             }
@@ -99,6 +112,8 @@ export const useApi = () => {
 
         // Принудительно обновляем реактивность
         vehicles.value = new Map(vehicles.value)
+        
+        console.log(`✅ Обновлено техники: ${vehicles.value.size}`)
       }
       
       return telemetryData
@@ -183,14 +198,15 @@ export const useApi = () => {
     await checkApiStatus()
     
     if (isConnected.value) {
-      // Получаем начальные данные
+      // Сначала получаем список техники из SQLite
+      console.log('📋 Получение списка техники из SQLite...')
       await fetchVehicles()
+      
+      // Затем получаем телеметрию и объединяем данные
+      console.log('📡 Получение телеметрии ESP32...')
       await fetchTelemetry()
       
-      // Отключили WebSocket пока его нет на сервере
-      // connectWebSocket()
-      
-      console.log('✅ API клиент инициализирован')
+      console.log(`✅ API клиент инициализирован. Техники: ${vehicles.value.size}`)
     } else {
       console.error('❌ API недоступен')
     }
@@ -225,14 +241,16 @@ export const useApi = () => {
     const now = Date.now()
     return allVehicles.value.filter(v => {
       // Считаем технику активной если:
-      // 1. Скорость больше 0, ИЛИ
-      // 2. Статус 'active', ИЛИ  
-      // 3. Последнее обновление было менее 30 секунд назад (техника онлайн)
-      const isMoving = v.speed > 0
-      const isActiveStatus = v.status === 'active'
-      const isOnline = v.lastUpdate && (now - new Date(v.lastUpdate).getTime()) < 30000
+      // 1. Статус явно 'active' (ESP32 передаёт это поле)
+      // 2. ИЛИ скорость больше 0
+      // 3. И последнее обновление было менее 60 секунд назад (техника онлайн)
+      const hasActiveStatus = v.status === 'active'
+      const isMoving = (v.speed || 0) > 0
+      const isOnline = v.lastUpdate && (now - new Date(v.lastUpdate).getTime()) < 60000 // 1 минута
       
-      return isMoving || isActiveStatus || isOnline
+      console.log(`🚜 ${v.id}: status=${v.status}, speed=${v.speed}, online=${isOnline}, active=${hasActiveStatus || isMoving}`)
+      
+      return (hasActiveStatus || isMoving) && isOnline
     }).length
   })
 
