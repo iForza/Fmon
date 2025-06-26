@@ -7,10 +7,10 @@ const char* ssid = "Xiaomi12";
 const char* password = "12345678";
 
 // EMQX Cloud настройки
-const char* mqtt_server = "o0acf6a7.ala.dedicated.gcp.emqxcloud.com";
-const int mqtt_port = 1883;
-const char* mqtt_username = "iforza";
-const char* mqtt_password = "iforza";
+const char* mqtt_server = "m6.wqtt.ru";
+const int mqtt_port = 19448;
+const char* mqtt_username = "u_lBFV1X";
+const char* mqtt_password = "UznD1SDp";
 const char* mqtt_client_id = "ESP32_Car_2046";
 
 // Топики

@@ -50,7 +50,7 @@
             <label class="block text-sm text-gray-400 mb-2">URL MQTT брокера</label>
             <UInput 
               v-model="settings.url" 
-              placeholder="wss://broker.emqxcloud.com:8084/mqtt"
+              placeholder="wss://m6.wqtt.ru:19451/mqtt"
               class="bg-gray-700"
             />
             <div class="text-xs text-gray-500 mt-1">
@@ -204,15 +204,15 @@ const testing = ref(false)
 const saving = ref(false)
 const testResult = ref(null)
 
-// Настройки (локальная копия для редактирования)
-const settings = ref({
-  url: 'wss://o0acf6a7.ala.dedicated.gcp.emqxcloud.com:8084/mqtt',
-  port: '8084',
-  username: 'iforza',
-  password: 'iforza',
-  clientId: 'mapmon-client',
-  topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status']
-})
+  // Настройки (локальная копия для редактирования)
+  const settings = ref({
+    url: 'wss://m6.wqtt.ru:19451/mqtt',
+    port: '19451',
+    username: 'u_lBFV1X',
+    password: 'UznD1SDp',
+    clientId: 'mapmon-client',
+    topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status']
+  })
 
 // Текстовое представление топиков
 const topicsText = computed({
@@ -294,10 +294,10 @@ const saveSettings = async () => {
 
 const resetToDefaults = () => {
   settings.value = {
-    url: 'wss://o0acf6a7.ala.dedicated.gcp.emqxcloud.com:8084/mqtt',
-    port: '8084',
-    username: 'iforza',
-    password: 'iforza',
+    url: 'wss://m6.wqtt.ru:19451/mqtt',
+    port: '19451',
+    username: 'u_lBFV1X',
+    password: 'UznD1SDp',
     clientId: 'mapmon-client-' + Date.now(),
     topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status']
   }

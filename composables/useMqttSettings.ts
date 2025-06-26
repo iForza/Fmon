@@ -24,12 +24,12 @@ export const useMqttSettings = () => {
   const activeDevices = ref(0)
   const isInitialized = ref(false)
 
-  // Настройки по умолчанию (совместимые с ESP32)
+  // Настройки по умолчанию для WQTT.RU брокера
   const defaultSettings: MqttSettings = {
-    url: 'wss://o0acf6a7.ala.dedicated.gcp.emqxcloud.com:8084/mqtt', // WebSocket для браузера
-    port: '8084', // WebSocket port для браузера  
-    username: 'iforza', // Те же учетные данные что у ESP32
-    password: 'iforza',
+    url: 'wss://m6.wqtt.ru:19451/mqtt', // WebSocket TLS для браузера
+    port: '19451', // WebSocket TLS port для браузера  
+    username: 'u_lBFV1X', // Учетные данные WQTT.RU
+    password: 'UznD1SDp',
     clientId: 'mapmon-web-' + Date.now(),
     topics: [
       'car', // Основной топик для совместимости

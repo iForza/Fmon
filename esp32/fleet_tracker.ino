@@ -21,8 +21,10 @@ const char* ssid = "Xiaomi12";        // Замените на имя вашей
 const char* password = "12345678"; // Замените на пароль WiFi
 
 // ===== НАСТРОЙКИ MQTT =====
-const char* mqtt_server = "test.mosquitto.org";  // Публичный MQTT брокер для тестов
-const int mqtt_port = 1883;                      // Стандартный MQTT порт
+const char* mqtt_server = "m6.wqtt.ru";          // WQTT.RU MQTT брокер
+const int mqtt_port = 19448;                     // TCP порт для ESP32
+const char* mqtt_username = "u_lBFV1X";          // Имя пользователя
+const char* mqtt_password = "UznD1SDp";          // Пароль
 const char* mqtt_topic = "vehicles/esp32_tractor/telemetry";
 
 // ===== НАСТРОЙКИ УСТРОЙСТВА =====
@@ -127,7 +129,7 @@ void reconnectMQTT() {
     String clientId = "ESP32Tractor-";
     clientId += String(random(0xffff), HEX);
     
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
       Serial.println(" успешно!");
       
       // Подписываемся на команды
