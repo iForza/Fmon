@@ -43,7 +43,7 @@ let currentZoomState = null // Состояние зума для сохране
 const getChartConfig = () => {
   const configs = {
     speed: {
-      color: '#3B82F6',
+      color: '#F59E0B',
       yMax: 50,
       unit: 'км/ч',
       formatValue: (value) => `${value.toFixed(1)} км/ч`
