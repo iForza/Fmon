@@ -42,7 +42,7 @@ lerna-debug.log*
 Thumbs.db
 .DS_Store
 
-# PM2 ecosystem file (будет создан на сервере)
+# PM2 ecosystem файлы (оставляем .cjs в репозитории)
 ecosystem.config.js
 
 # Backup folders
