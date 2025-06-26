@@ -2,15 +2,14 @@ const mqtt = require('mqtt');
 const SQLiteManager = require('./SQLiteManager.cjs');
 const db = new SQLiteManager();
 
-console.log('🔌 Connecting to EMQX Cloud (correct URL)...');
-const client = mqtt.connect('wss://o0acf6a7.ala.dedicated.gcp.emqxcloud.com:8084/mqtt', {
+console.log('🔌 Connecting to Eclipse Mosquitto (test.mosquitto.org)...');
+const client = mqtt.connect('mqtt://test.mosquitto.org:1883', {
     clientId: 'mapmon-server-' + Date.now(),
-    username: 'iforza',
-    password: 'iforza'
+    // Аутентификация НЕ ТРЕБУЕТСЯ для публичного брокера
 });
 
 client.on('connect', () => {
-    console.log('✅ MQTT Connected - EMQX Cloud');
+    console.log('✅ MQTT Connected - Eclipse Mosquitto');
     client.subscribe('car');
     client.subscribe('vehicles/+/telemetry');
     client.subscribe('vehicles/+/status');
