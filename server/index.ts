@@ -506,7 +506,7 @@ process.on('SIGINT', gracefulShutdown)
 // Запуск сервера
 const start = async () => {
   try {
-    const port = process.env.PORT ? parseInt(process.env.PORT) : 3001
+    const port = process.env.PORT ? parseInt(process.env.PORT) : 3000
     const host = process.env.HOST || '0.0.0.0'
     
     await fastify.listen({ port, host })

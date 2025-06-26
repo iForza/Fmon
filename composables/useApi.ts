@@ -66,11 +66,12 @@ export const useApi = () => {
   // Получение последней телеметрии
   const fetchTelemetry = async () => {
     try {
-      const response = await $fetch<any[]>(`${apiBase}/telemetry/latest`)
+      const response = await $fetch<ApiResponse<any[]>>(`${apiBase}/telemetry/latest`)
+      const telemetryData = response.data || []
       
-      if (Array.isArray(response)) {
+      if (Array.isArray(telemetryData)) {
         // Обновляем данные техники с новой телеметрией
-        response.forEach(item => {
+        telemetryData.forEach(item => {
           if (item.vehicle_id) {
             const existing = vehicles.value.get(item.vehicle_id) || {
               id: item.vehicle_id,
@@ -100,7 +101,7 @@ export const useApi = () => {
         vehicles.value = new Map(vehicles.value)
       }
       
-      return response
+      return telemetryData
     } catch (err: any) {
       error.value = err.message || 'Ошибка получения телеметрии'
       console.error('API Error (telemetry):', err)
