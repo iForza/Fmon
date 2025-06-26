@@ -49,6 +49,17 @@ class SQLiteManager {
         `).all(); 
     }
 
+    getLatestTelemetryForVehicle(vehicleId) {
+        return this.db.prepare(`
+            SELECT t.*, v.name as vehicle_name 
+            FROM telemetry t 
+            JOIN vehicles v ON t.vehicle_id = v.id 
+            WHERE t.vehicle_id = ? 
+            ORDER BY t.timestamp DESC 
+            LIMIT 1
+        `).get(vehicleId); 
+    }
+
     getTelemetryHistory(vehicleId = null, hours = 1) {
         const timeLimit = Date.now() - (hours * 60 * 60 * 1000);
         let query = `

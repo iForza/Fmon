@@ -5,6 +5,13 @@ import fastifyCors from '@fastify/cors'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { readFileSync } from 'fs'
+import { resolve } from 'path'
+
+// Импортируем SQLiteManager для чтения данных ESP32
+const SQLiteManager = require('../server-backup/SQLiteManager.cjs')
+const db = new SQLiteManager()
+
+console.log('✅ SQLite Manager инициализирован в основном сервере')
 
 // Получаем путь к директории
 const __filename = fileURLToPath(import.meta.url)
@@ -93,13 +100,45 @@ vehicles.set('combine_001', {
 
 // API маршруты
 
-// Получить список всей техники
+// Получить список всей техники из SQLite
 fastify.get('/api/vehicles', async (request, reply) => {
-  const vehicleList = Array.from(vehicles.values())
-  return {
-    success: true,
-    data: vehicleList,
-    count: vehicleList.length
+  try {
+    // Получаем список техники из SQLite
+    const vehicleList = db.getAllVehicles()
+    
+    // Дополняем данными из последней телеметрии
+    const enrichedVehicles = vehicleList.map(vehicle => {
+      const latestTelemetry = db.getLatestTelemetryForVehicle(vehicle.id)
+      
+      return {
+        id: vehicle.id,
+        name: vehicle.name,
+        lat: latestTelemetry?.lat || 0,
+        lng: latestTelemetry?.lng || 0,
+        speed: latestTelemetry?.speed || 0,
+        status: latestTelemetry?.speed > 0 ? 'active' : 'stopped',
+        lastUpdate: new Date(latestTelemetry?.timestamp || Date.now()),
+        battery: latestTelemetry?.battery,
+        temperature: latestTelemetry?.temperature,
+        rpm: latestTelemetry?.rpm
+      }
+    })
+    
+    console.log(`🚜 Возвращено ${enrichedVehicles.length} единиц техники из SQLite`)
+    
+    return {
+      success: true,
+      data: enrichedVehicles,
+      count: enrichedVehicles.length
+    }
+  } catch (error) {
+    console.error('❌ Ошибка получения списка техники из SQLite:', error)
+    
+    return {
+      success: true,
+      data: [],
+      count: 0
+    }
   }
 })
 
@@ -163,23 +202,38 @@ fastify.post<{Body: TelemetryMessage}>('/api/telemetry', async (request, reply) 
   }
 })
 
-// Получить последнюю телеметрию
+// Получить последнюю телеметрию из SQLite базы данных
 fastify.get('/api/telemetry/latest', async (request, reply) => {
-  const telemetryData = Array.from(vehicles.values()).map(vehicle => ({
-    vehicle_id: vehicle.id,
-    vehicle_name: vehicle.name,
-    lat: vehicle.lat,
-    lng: vehicle.lng,
-    speed: vehicle.speed,
-    battery: vehicle.battery,
-    temperature: Math.random() * 40 + 20, // Симуляция температуры 20-60°C
-    rpm: Math.random() * 2000 + 500, // Симуляция RPM 500-2500
-    timestamp: vehicle.lastUpdate.toISOString()
-  }))
-  
-  return {
-    success: true,
-    data: telemetryData
+  try {
+    // Читаем последние данные из SQLite (данные от ESP32)
+    const telemetry = db.getLatestTelemetry()
+    
+    const telemetryData = telemetry.map(t => ({
+      vehicle_id: t.vehicle_id,
+      vehicle_name: t.vehicle_name || `ESP32 ${t.vehicle_id}`,
+      lat: t.lat,
+      lng: t.lng,
+      speed: t.speed,
+      battery: t.battery,
+      temperature: t.temperature,
+      rpm: t.rpm,
+      timestamp: new Date(t.timestamp).toISOString()
+    }))
+    
+    console.log(`📡 Возвращено ${telemetryData.length} записей телеметрии из SQLite`)
+    
+    return {
+      success: true,
+      data: telemetryData
+    }
+  } catch (error) {
+    console.error('❌ Ошибка чтения телеметрии из SQLite:', error)
+    
+    // Возвращаем пустой массив при ошибке
+    return {
+      success: true,
+      data: []
+    }
   }
 })
 
