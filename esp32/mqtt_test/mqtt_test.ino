@@ -6,11 +6,13 @@
 const char* ssid = "Xiaomi12";
 const char* password = "12345678";
 
-// EMQX Cloud настройки
-const char* mqtt_server = "m6.wqtt.ru";
-const int mqtt_port = 19448;
-const char* mqtt_username = "u_lBFV1X";
-const char* mqtt_password = "UznD1SDp";
+// ===== Eclipse Mosquitto Test Broker настройки =====
+const char* mqtt_server = "test.mosquitto.org";
+const int mqtt_port = 1883;                      // TCP
+const int mqtt_ssl_port = 8883;                  // TLS
+const int mqtt_ws_port = 8080;                   // WebSocket
+const int mqtt_wss_port = 8081;                  // WebSocket TLS
+// Аутентификация НЕ ТРЕБУЕТСЯ для публичного брокера
 const char* mqtt_client_id = "ESP32_Car_2046";
 
 // Топики
@@ -40,8 +42,8 @@ unsigned long lastHeartbeatMsg = 0;
 unsigned long lastReconnectAttempt = 0;
 
 // Интервалы (в миллисекундах)
-const unsigned long TELEMETRY_INTERVAL = 1000;  // Телеметрия каждые 3 секунды
-const unsigned long HEARTBEAT_INTERVAL = 2000;   // Heartbeat каждые 5 секунд
+const unsigned long TELEMETRY_INTERVAL = 3000;  // Телеметрия каждые 3 секунды
+const unsigned long HEARTBEAT_INTERVAL = 5000;   // Heartbeat каждые 5 секунд
 const unsigned long RECONNECT_INTERVAL = 5000;   // Попытки переподключения каждые 5 секунд
 
 // Счетчики для диагностики
@@ -53,8 +55,13 @@ void setup() {
   delay(1000);
   
   Serial.println("=================================");
-  Serial.println("   ESP32 MQTT Fleet Monitor     ");
+  Serial.println("  ESP32 Mosquitto Fleet Monitor ");
   Serial.println("=================================");
+  Serial.println("Брокер: " + String(mqtt_server));
+  Serial.println("Порт: " + String(mqtt_port) + " (TCP)");
+  Serial.println("WebSocket: " + String(mqtt_ws_port));
+  Serial.println("WebSocket TLS: " + String(mqtt_wss_port));
+  Serial.println("Аутентификация: НЕ ТРЕБУЕТСЯ");
   
   // Подключение к WiFi
   setup_wifi();
@@ -86,7 +93,7 @@ void setup_wifi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("");
-    Serial.println("WiFi подключен успешно!");
+    Serial.println("✅ WiFi подключен успешно!");
     Serial.print("IP адрес: ");
     Serial.println(WiFi.localIP());
     Serial.print("Сила сигнала: ");
@@ -94,7 +101,7 @@ void setup_wifi() {
     Serial.println(" dBm");
   } else {
     Serial.println("");
-    Serial.println("Ошибка подключения к WiFi!");
+    Serial.println("❌ Ошибка подключения к WiFi!");
     Serial.println("Перезагрузка через 10 секунд...");
     delay(10000);
     ESP.restart();
@@ -120,15 +127,16 @@ bool reconnect() {
   
   lastReconnectAttempt = millis();
   
-  Serial.print("🔄 Попытка подключения к MQTT (попытка #");
+  Serial.print("🔄 Попытка подключения к Mosquitto (попытка #");
   Serial.print(++reconnectCount);
   Serial.print(")...");
   
   // Создаем уникальный client ID с timestamp
   String clientId = String(mqtt_client_id) + "_" + String(millis());
   
-  if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
-    Serial.println(" ✅ ПОДКЛЮЧЕН!");
+  // Подключение БЕЗ аутентификации (публичный брокер)
+  if (client.connect(clientId.c_str())) {
+    Serial.println(" ✅ ПОДКЛЮЧЕН К MOSQUITTO!");
     reconnectCount = 0; // Сбрасываем счетчик при успешном подключении
     
     // Отправляем статус подключения
@@ -178,6 +186,7 @@ void sendTelemetryMessage() {
   doc["messageCount"] = ++messageCount;
   doc["rssi"] = WiFi.RSSI();
   doc["freeHeap"] = ESP.getFreeHeap();
+  doc["broker"] = "Eclipse Mosquitto";
   
   // Конвертируем в строку
   String payload;
@@ -185,7 +194,7 @@ void sendTelemetryMessage() {
   
   // Отправляем сообщение
   if (client.publish(telemetry_topic, payload.c_str(), false)) { // QoS 0, не retain
-    Serial.println("📊 Телеметрия #" + String(messageCount) + " отправлена");
+    Serial.println("📊 Телеметрия #" + String(messageCount) + " отправлена в Mosquitto");
     Serial.println("   Координаты: " + String(current_lat, 5) + ", " + String(current_lng, 5));
     Serial.println("   Скорость: " + String(speed) + " км/ч, Статус: " + status_str);
     Serial.println("   Батарея: " + String(battery, 1) + "%, Температура: " + String(temperature, 1) + "°C");
@@ -202,12 +211,13 @@ void sendHeartbeatMessage() {
   doc["uptime"] = millis() / 1000;
   doc["rssi"] = WiFi.RSSI();
   doc["freeHeap"] = ESP.getFreeHeap();
+  doc["broker"] = "Eclipse Mosquitto";
   
   String payload;
   serializeJson(doc, payload);
   
   if (client.publish(heartbeat_topic, payload.c_str(), false)) {
-    Serial.println("💓 Heartbeat отправлен (uptime: " + String(millis()/1000) + "s)");
+    Serial.println("💓 Heartbeat отправлен в Mosquitto (uptime: " + String(millis()/1000) + "s)");
   }
 }
 
@@ -217,12 +227,13 @@ void sendStatusMessage(String status) {
   doc["status"] = status;
   doc["timestamp"] = millis();
   doc["rssi"] = WiFi.RSSI();
+  doc["broker"] = "Eclipse Mosquitto";
   
   String payload;
   serializeJson(doc, payload);
   
   if (client.publish(status_topic, payload.c_str(), true)) { // Retain = true для статуса
-    Serial.println("📡 Статус отправлен: " + status);
+    Serial.println("📡 Статус отправлен в Mosquitto: " + status);
   }
 }
 

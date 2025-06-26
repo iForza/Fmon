@@ -50,11 +50,11 @@
             <label class="block text-sm text-gray-400 mb-2">URL MQTT брокера</label>
             <UInput 
               v-model="settings.url" 
-              placeholder="wss://m6.wqtt.ru:19451/mqtt"
+              placeholder="ws://test.mosquitto.org:8080/mqtt"
               class="bg-gray-700"
             />
             <div class="text-xs text-gray-500 mt-1">
-              Используйте wss:// для WebSocket соединения
+              Используйте ws:// для WebSocket соединения
             </div>
           </div>
 
@@ -64,7 +64,7 @@
             <UInput 
               v-model="settings.port" 
               type="number"
-              placeholder="8084"
+              placeholder="8080"
               class="bg-gray-700"
             />
           </div>
@@ -74,7 +74,7 @@
             <label class="block text-sm text-gray-400 mb-2">Имя пользователя</label>
             <UInput 
               v-model="settings.username" 
-              placeholder="iforza"
+              placeholder="(не требуется)"
               class="bg-gray-700"
             />
           </div>
@@ -206,10 +206,10 @@ const testResult = ref(null)
 
   // Настройки (локальная копия для редактирования)
   const settings = ref({
-    url: 'wss://m6.wqtt.ru:19451/mqtt',
-    port: '19451',
-    username: 'u_lBFV1X',
-    password: 'UznD1SDp',
+    url: 'ws://test.mosquitto.org:8080/mqtt',
+    port: '8080',
+    username: '',
+    password: '',
     clientId: 'mapmon-client',
     topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status']
   })
@@ -294,10 +294,10 @@ const saveSettings = async () => {
 
 const resetToDefaults = () => {
   settings.value = {
-    url: 'wss://m6.wqtt.ru:19451/mqtt',
-    port: '19451',
-    username: 'u_lBFV1X',
-    password: 'UznD1SDp',
+    url: 'ws://test.mosquitto.org:8080/mqtt',
+    port: '8080',
+    username: '',
+    password: '',
     clientId: 'mapmon-client-' + Date.now(),
     topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status']
   }

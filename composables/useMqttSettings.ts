@@ -24,17 +24,18 @@ export const useMqttSettings = () => {
   const activeDevices = ref(0)
   const isInitialized = ref(false)
 
-  // Настройки по умолчанию для WQTT.RU брокера
+  // Настройки по умолчанию для Eclipse Mosquitto
   const defaultSettings: MqttSettings = {
-    url: 'wss://m6.wqtt.ru:19451/mqtt', // WebSocket TLS для браузера
-    port: '19451', // WebSocket TLS port для браузера  
-    username: 'u_lBFV1X', // Учетные данные WQTT.RU
-    password: 'UznD1SDp',
+    url: 'ws://test.mosquitto.org:8080/mqtt', // WebSocket для браузера
+    port: '8080', // WebSocket port для браузера  
+    username: '', // Аутентификация НЕ ТРЕБУЕТСЯ
+    password: '',
     clientId: 'mapmon-web-' + Date.now(),
     topics: [
       'car', // Основной топик для совместимости
       'vehicles/+/telemetry', // Стандартный формат
       'vehicles/+/status',
+      'vehicles/+/heartbeat', // Heartbeat от ESP32
       'esp32/+/telemetry', // Дополнительные форматы ESP32
       'fleet/+/data' // Альтернативный формат
     ]

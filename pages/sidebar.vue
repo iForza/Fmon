@@ -102,7 +102,7 @@
               <label class="block text-sm text-gray-400 mb-1">URL сервера</label>
               <UInput
                 v-model="mqttSettings.url"
-                placeholder="wss://m6.wqtt.ru:19451/mqtt"
+                placeholder="ws://test.mosquitto.org:8080/mqtt"
                 class="w-full"
               />
             </div>
@@ -184,9 +184,9 @@ const tabs = [
 
 // Убраны демо данные - используем только реальные ESP32 устройства
 
-// Настройки MQTT - используем WQTT.RU брокер
+// Настройки MQTT - используем Eclipse Mosquitto брокер
 const mqttSettings = ref({
-  url: 'wss://m6.wqtt.ru:19451/mqtt',
+  url: 'ws://test.mosquitto.org:8080/mqtt',
   topic: 'car',
   connected: false
 })
