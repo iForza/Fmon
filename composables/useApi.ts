@@ -113,7 +113,7 @@ export const useApi = () => {
         // Принудительно обновляем реактивность
         vehicles.value = new Map(vehicles.value)
         
-        console.log(`✅ Обновлено техники: ${vehicles.value.size}`)
+        console.log(`✅ Обновлено техники: ${vehicles.value?.size || 0}`)
       }
       
       return telemetryData
@@ -206,7 +206,7 @@ export const useApi = () => {
       console.log('📡 Получение телеметрии ESP32...')
       await fetchTelemetry()
       
-      console.log(`✅ API клиент инициализирован. Техники: ${vehicles.value.size}`)
+      console.log(`✅ API клиент инициализирован. Техники: ${vehicles.value?.size || 0}`)
     } else {
       console.error('❌ API недоступен')
     }

@@ -193,7 +193,7 @@
                   🌍 test.mosquitto.org:8081/mqtt
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
-                  WebSocket TLS | Те же топики что ESP32
+                  WebSocket TLS | Демо режим при ошибке подключения
                 </div>
                 <div class="text-xs text-green-400 mt-1">
                   📡 car, vehicles/+/status, vehicles/+/heartbeat
@@ -227,7 +227,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, getCurrentInstance } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, getCurrentInstance, watch, readonly } from 'vue'
 import { useApi } from '~/composables/useApi'
 
 // Установка темы приложения
@@ -244,13 +244,9 @@ const tabs = [
   { id: 'debug', label: 'MQTT Отладка', icon: 'i-heroicons-bug-ant' }
 ]
 
-// Состояние отладки
-const debugMessages = ref([])
+// Состояние для MQTT отладки
 const debugConsole = ref(null)
 const autoScroll = ref(true)
-const isPaused = ref(false)
-const maxMessages = ref(1000)
-const messageFilter = ref('all')
 
 // Стилизация live MQTT сообщений
 const getLiveMessageClass = (type) => {
@@ -271,103 +267,17 @@ const formatTime = (timestamp) => {
   return new Date(timestamp).toLocaleTimeString('ru-RU')
 }
 
-// Добавление сообщения в лог
-const addDebugMessage = (type, message, topic = null, data = null) => {
-  if (isPaused.value) return
-  
-  const newMessage = {
-    timestamp: Date.now(),
-    type,
-    message,
-    topic,
-    data
-  }
-  
-  debugMessages.value.unshift(newMessage)
-  
-  // Ограничиваем количество сообщений
-  if (debugMessages.value.length > maxMessages.value) {
-    debugMessages.value = debugMessages.value.slice(0, maxMessages.value)
-  }
-  
-  // Автопрокрутка
-  if (autoScroll.value) {
-    nextTick(() => {
-      if (debugConsole.value) {
-        debugConsole.value.scrollTop = 0
-      }
-    })
-  }
-}
-
-// Управление логгированием
-const toggleAutoScroll = () => {
-  autoScroll.value = !autoScroll.value
-}
-
-const pauseLogging = () => {
-  isPaused.value = !isPaused.value
-  addDebugMessage('system', isPaused.value ? 'Логгирование приостановлено' : 'Логгирование возобновлено')
-}
-
-const clearDebugLog = () => {
-  debugMessages.value = []
-  addDebugMessage('system', 'Лог очищен')
-}
-
-const exportDebugLog = () => {
-  const dataStr = JSON.stringify(debugMessages.value, null, 2)
-  const dataBlob = new Blob([dataStr], { type: 'application/json' })
-  const url = URL.createObjectURL(dataBlob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `mqtt-debug-${new Date().toISOString().split('T')[0]}.json`
-  link.click()
-  URL.revokeObjectURL(url)
-  
-  addDebugMessage('system', 'Лог экспортирован в JSON файл')
-}
-
-// Подключение к данным
-const connectToDebugData = async () => {
-  // Проверяем API статус
-  await api.checkApiStatus()
-  
-  if (api.isConnected.value) {
-    addDebugMessage('system', '✅ API сервер подключен')
-    
-    // Запускаем периодическую проверку новых данных
-    pollingInterval = setInterval(async () => {
-      try {
-        const telemetryData = await api.fetchTelemetry()
-        if (telemetryData && telemetryData.length > 0) {
-          telemetryData.forEach(item => {
-            addDebugMessage(
-              'api',
-              `Телеметрия: lat=${item.lat}, lng=${item.lng}, speed=${item.speed}, battery=${item.battery}%, temp=${item.temperature}°C`,
-              `vehicles/${item.vehicle_id}/telemetry`,
-              item
-            )
-          })
-        }
-      } catch (error) {
-        addDebugMessage('error', `Ошибка получения данных: ${error.message}`)
-      }
-    }, 3000) // Каждые 3 секунды
-  } else {
-    addDebugMessage('error', '❌ API сервер недоступен')
-  }
-}
+// Переменные для отслеживания соединений
+let pollingInterval = null
+let wsConnection = null
 
 // Lifecycle
 onMounted(async () => {
-  addDebugMessage('system', '🚀 Отладочная консоль запущена')
-  
-  // Инициализируем API
+  // Инициализируем API для получения истории
   await api.initialize()
   
-  // Подключаемся к данным
-  await connectToDebugData()
+  // Запускаем опрос данных для вкладки "История"
+  api.startPolling()
 })
 
 onUnmounted(() => {
@@ -376,10 +286,6 @@ onUnmounted(() => {
   }
   if (wsConnection) {
     wsConnection.close()
-  }
-  
-  if (getCurrentInstance()) {
-    addDebugMessage('system', '🔌 Отладочная консоль отключена')
   }
 })
 
@@ -401,13 +307,17 @@ const useLiveMqttDebug = () => {
   const connectToMqtt = () => {
     if (process.client && typeof window !== 'undefined') {
       try {
-        // Реальное WebSocket подключение к test.mosquitto.org
-        const brokerUrl = 'wss://test.mosquitto.org:8081/mqtt'
-        
         addMessage('SYSTEM', 'connection', '🔄 Подключение к test.mosquitto.org:8081...')
         
-        // Динамический импорт MQTT.js для браузера
-        import('mqtt').then((mqtt) => {
+        // Проверяем наличие MQTT библиотеки
+        import('mqtt').then((mqttModule) => {
+          const mqtt = mqttModule.default || mqttModule
+          
+          if (!mqtt || !mqtt.connect) {
+            throw new Error('MQTT библиотека загружена неправильно')
+          }
+          
+          const brokerUrl = 'wss://test.mosquitto.org:8081/mqtt'
           client.value = mqtt.connect(brokerUrl, {
             clientId: 'mapmon-debug-web-' + Date.now(),
             clean: true,
@@ -543,13 +453,64 @@ const useLiveMqttDebug = () => {
         }).catch((error) => {
           console.error('❌ Ошибка загрузки MQTT библиотеки:', error)
           addMessage('ERROR', 'connection', `❌ Не удалось загрузить MQTT: ${error.message}`)
+          addMessage('SYSTEM', 'connection', '🔄 Переключение в демо режим...')
+          startDemoMode()
         })
 
       } catch (error) {
         console.error('❌ Ошибка подключения MQTT:', error)
         addMessage('ERROR', 'connection', `❌ Не удалось подключиться: ${error.message}`)
+        addMessage('SYSTEM', 'connection', '🔄 Переключение в демо режим...')
+        startDemoMode()
       }
     }
+  }
+
+  // Демо режим с симуляцией ESP32 данных
+  const startDemoMode = () => {
+    isConnected.value = true
+    addMessage('SYSTEM', 'demo', '🎭 Демо режим активирован - симуляция ESP32 данных')
+    
+    // Симуляция подключения ESP32_Car_2046
+    setTimeout(() => {
+      addMessage('STATUS', 'ESP32_Car_2046', '📊 ESP32_Car_2046: status=active, rssi=-45dBm')
+      statistics.value.activeDevices.add('ESP32_Car_2046')
+    }, 1000)
+    
+    // Периодическая симуляция данных каждые 3-5 секунд
+    const demoInterval = setInterval(() => {
+      if (!isPaused.value && isConnected.value) {
+        const messageTypes = ['TELEMETRY', 'HEARTBEAT']
+        const type = messageTypes[Math.floor(Math.random() * messageTypes.length)]
+        
+        if (type === 'TELEMETRY') {
+          // Симуляция телеметрии
+          const lat = (55.7558 + (Math.random() - 0.5) * 0.01).toFixed(6)
+          const lng = (37.6176 + (Math.random() - 0.5) * 0.01).toFixed(6)
+          const speed = Math.floor(Math.random() * 60)
+          const battery = (80 + Math.random() * 20).toFixed(2)
+          const temp = (20 + Math.random() * 15).toFixed(1)
+          const rpm = Math.floor(Math.random() * 3000)
+          const msgCount = statistics.value.totalMessages + 1
+          
+          addMessage('TELEMETRY', 'ESP32_Car_2046', 
+            `📍 ESP32_Car_2046: lat=${lat}, lng=${lng}, speed=${speed}км/ч, battery=${battery}%, temp=${temp}°C, rpm=${rpm}, msg#${msgCount}`)
+        } else {
+          // Симуляция heartbeat
+          const uptime = Math.floor(Date.now() / 1000)
+          const rssi = -40 - Math.floor(Math.random() * 20)
+          const heap = 150000 + Math.floor(Math.random() * 50000)
+          
+          addMessage('HEARTBEAT', 'ESP32_Car_2046', 
+            `💓 ESP32_Car_2046: heartbeat, uptime=${uptime}s, rssi=${rssi}dBm, heap=${heap}`)
+        }
+        
+        statistics.value.totalMessages++
+      }
+    }, 3000 + Math.random() * 2000) // 3-5 секунд
+    
+    // Сохраняем интервал для очистки
+    client.value = { demoInterval, isDemo: true }
   }
 
   // Добавление сообщения в лог
@@ -574,10 +535,17 @@ const useLiveMqttDebug = () => {
   // Отключение MQTT
   const disconnect = () => {
     if (client.value) {
-      client.value.end(true)
+      if (client.value.isDemo) {
+        // Демо режим - очищаем интервал
+        clearInterval(client.value.demoInterval)
+        addMessage('SYSTEM', 'demo', '🛑 Демо режим отключен')
+      } else {
+        // Реальное MQTT соединение
+        client.value.end(true)
+        addMessage('SYSTEM', 'connection', '🛑 MQTT отключен пользователем')
+      }
       client.value = null
       isConnected.value = false
-      addMessage('SYSTEM', 'connection', '🛑 MQTT отключен пользователем')
     }
   }
 
@@ -617,15 +585,14 @@ const useLiveMqttDebug = () => {
   }
 
   // Инициализация при создании
-  onMounted(() => {
+  const init = () => {
     addMessage('SYSTEM', 'init', '🚀 Live MQTT отладчик запущен')
-    connectToMqtt()
-  })
+  }
 
-  // Очистка при размонтировании
-  onUnmounted(() => {
+  // Очистка соединения
+  const cleanup = () => {
     disconnect()
-  })
+  }
 
   return {
     messages: readonly(messages),
@@ -636,10 +603,37 @@ const useLiveMqttDebug = () => {
     connectToMqtt,
     disconnect,
     clearMessages,
-    exportMessages
+    exportMessages,
+    init,
+    cleanup
   }
 }
 
 // Используем новый live MQTT композабл
 const mqttDebug = useLiveMqttDebug()
+
+// Управление lifecycle для MQTT отладчика
+watch(activeTab, (newTab) => {
+  if (newTab === 'debug') {
+    // Активируем MQTT отладчик при переключении на вкладку
+    mqttDebug.init()
+    nextTick(() => {
+      mqttDebug.connectToMqtt()
+    })
+  } else {
+    // Отключаем MQTT при переключении на другую вкладку
+    mqttDebug.cleanup()
+  }
+}, { immediate: true })
+
+// Автопрокрутка для MQTT консоли
+watch(() => mqttDebug.messages, () => {
+  if (autoScroll.value && activeTab.value === 'debug') {
+    nextTick(() => {
+      if (debugConsole.value) {
+        debugConsole.value.scrollTop = 0
+      }
+    })
+  }
+}, { deep: true })
 </script> 
