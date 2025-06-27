@@ -63,7 +63,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-400">Live Сообщений</p>
-                  <p class="text-lg font-bold text-blue-400">{{ mqttDebug.statistics.totalMessages }}</p>
+                  <p class="text-lg font-bold text-blue-400">{{ mqttDebug.statistics.totalMessages || 0 }}</p>
                 </div>
                 <UIcon name="i-heroicons-chat-bubble-left-right" class="text-blue-400" />
               </div>
@@ -73,7 +73,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-400">Ошибок</p>
-                  <p class="text-lg font-bold text-red-400">{{ mqttDebug.statistics.errors }}</p>
+                  <p class="text-lg font-bold text-red-400">{{ mqttDebug.statistics.errors || 0 }}</p>
                 </div>
                 <UIcon name="i-heroicons-exclamation-triangle" class="text-red-400" />
               </div>
@@ -83,7 +83,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-400">Live Устройств</p>
-                  <p class="text-lg font-bold text-green-400">{{ mqttDebug.statistics.activeDevices.size }}</p>
+                  <p class="text-lg font-bold text-green-400">{{ mqttDebug.statistics.activeDevices?.size || 0 }}</p>
                 </div>
                 <UIcon name="i-heroicons-cpu-chip" class="text-green-400" />
               </div>
