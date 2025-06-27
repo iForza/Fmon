@@ -6,7 +6,7 @@
         <!-- Заголовок страницы -->
         <div class="mb-8">
           <h1 class="text-3xl font-bold text-white mb-2">🕒 История и Отладка</h1>
-          <p class="text-gray-400">Исторические данные и мониторинг сырых MQTT данных</p>
+          <p class="text-gray-400">Исторические данные и мониторинг сырых MQTT данных от ESP32</p>
         </div>
 
         <!-- Вкладки -->
@@ -82,7 +82,7 @@
             <div class="bg-gray-800 rounded-lg p-4">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-sm text-gray-400">Live Устройств</p>
+                  <p class="text-sm text-gray-400">ESP32 Устройств</p>
                   <p class="text-lg font-bold text-green-400">{{ mqttDebug.statistics.activeDevices?.size || 0 }}</p>
                 </div>
                 <UIcon name="i-heroicons-cpu-chip" class="text-green-400" />
@@ -92,7 +92,7 @@
 
           <!-- Управление -->
           <div class="flex justify-between items-center">
-            <h3 class="text-lg font-semibold text-white">Сырые MQTT данные</h3>
+            <h3 class="text-lg font-semibold text-white">Сырые MQTT данные от ESP32</h3>
             <div class="flex space-x-3">
               <button
                 @click="toggleAutoScroll"
@@ -165,7 +165,7 @@
               <!-- Заглушка если нет сообщений -->
               <div v-if="mqttDebug.messages.length === 0" class="text-center text-gray-500 mt-8">
                 <UIcon name="i-heroicons-signal-slash" class="text-4xl mb-4" />
-                <p>Ожидание Live MQTT сообщений...</p>
+                <p>Ожидание реальных MQTT сообщений от ESP32...</p>
                 <p class="text-xs mt-2">{{ mqttDebug.isConnected ? 'Подключите ESP32 устройство' : 'Подключение к MQTT брокеру...' }}</p>
               </div>
             </div>
@@ -193,7 +193,7 @@
                   🌍 test.mosquitto.org:8081/mqtt
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
-                  WebSocket TLS | Демо режим при ошибке подключения
+                  WebSocket для браузера | Только реальные данные ESP32
                 </div>
                 <div class="text-xs text-green-400 mt-1">
                   📡 car, vehicles/+/status, vehicles/+/heartbeat
@@ -248,6 +248,11 @@ const tabs = [
 const debugConsole = ref(null)
 const autoScroll = ref(true)
 
+// Функция переключения автопрокрутки
+const toggleAutoScroll = () => {
+  autoScroll.value = !autoScroll.value
+}
+
 // Стилизация live MQTT сообщений
 const getLiveMessageClass = (type) => {
   switch (type) {
@@ -289,7 +294,7 @@ onUnmounted(() => {
   }
 })
 
-// Новый composable для Live MQTT мониторинга
+// Composable для Live MQTT мониторинга ESP32
 const useLiveMqttDebug = () => {
   const messages = ref([])
   const statistics = ref({
@@ -303,7 +308,7 @@ const useLiveMqttDebug = () => {
   const maxMessages = ref(100)
   const client = ref(null)
 
-  // Подключение к MQTT брокеру для live данных
+  // Подключение к MQTT брокеру для реальных данных от ESP32
   const connectToMqtt = () => {
     if (process.client && typeof window !== 'undefined') {
       try {
@@ -314,16 +319,17 @@ const useLiveMqttDebug = () => {
           const mqtt = mqttModule.default || mqttModule
           
           if (!mqtt || !mqtt.connect) {
-            throw new Error('MQTT библиотека загружена неправильно')
+            throw new Error('MQTT.js библиотека недоступна')
           }
           
           const brokerUrl = 'wss://test.mosquitto.org:8081/mqtt'
           client.value = mqtt.connect(brokerUrl, {
-            clientId: 'mapmon-debug-web-' + Date.now(),
+            clientId: 'mapmon-esp32-debug-' + Date.now(),
             clean: true,
             reconnectPeriod: 5000,
-            connectTimeout: 10000,
-            keepalive: 60
+            connectTimeout: 15000,
+            keepalive: 60,
+            protocolVersion: 4
           })
 
           client.value.on('connect', () => {
@@ -333,14 +339,18 @@ const useLiveMqttDebug = () => {
             
             addMessage('SYSTEM', 'connection', '✅ Подключен к test.mosquitto.org:8081')
             
-            // Подписываемся на те же топики что использует ESP32
+            // Подписываемся на топики которые использует ESP32
             const topics = [
               'car',                                    // Основная телеметрия ESP32
-              'vehicles/+/telemetry',                   // Стандартный формат
-              'vehicles/+/status',                      // Статусы устройств
+              'vehicles/+/telemetry',                   // Стандартная телеметрия
+              'vehicles/+/status',                      // Статусы ESP32 устройств
               'vehicles/+/heartbeat',                   // Heartbeat от ESP32
-              'vehicles/ESP32_Car_2046/status',         // Конкретный статус
-              'vehicles/ESP32_Car_2046/heartbeat'       // Конкретный heartbeat
+              'esp32/+/data',                          // Альтернативный формат ESP32
+              'esp32/+/status',                        // Статус ESP32
+              'fleet/+/telemetry',                     // Флот ESP32 устройств
+              'debug/+/+',                             // Отладочные сообщения
+              'test/+',                                // Тестовые сообщения ESP32
+              'iot/+/sensor'                           // IoT сенсоры ESP32
             ]
             
             topics.forEach(topic => {
@@ -359,61 +369,71 @@ const useLiveMqttDebug = () => {
             if (!isPaused.value) {
               try {
                 const messageStr = message.toString()
-                console.log(`📡 MQTT Live: [${topic}] ${messageStr}`)
+                console.log(`📡 MQTT Live от ESP32: [${topic}] ${messageStr}`)
                 
                 let data
                 try {
                   data = JSON.parse(messageStr)
                 } catch {
-                  // Если не JSON, показываем как есть
+                  // Если не JSON, показываем как текст
                   data = { raw: messageStr }
                 }
                 
                 // Определяем device_id из данных или топика
-                let deviceId = data.id || data.device_id || data.vehicle_id || 'unknown'
-                if (deviceId === 'unknown' && topic.includes('vehicles/')) {
+                let deviceId = data.id || data.device_id || data.vehicle_id || data.client_id || 'ESP32_device'
+                if (deviceId === 'ESP32_device' && topic.includes('/')) {
                   const parts = topic.split('/')
                   if (parts.length >= 2) {
-                    deviceId = parts[1]
+                    deviceId = parts[1] || parts[0]
                   }
                 }
                 
                 // Обновляем статистику
                 statistics.value.totalMessages++
-                if (deviceId !== 'unknown') {
-                  statistics.value.activeDevices.add(deviceId)
-                }
+                statistics.value.activeDevices.add(deviceId)
                 
-                // Определяем тип сообщения по топику
+                // Определяем тип сообщения по топику и содержимому
                 let messageType = 'MQTT'
-                if (topic === 'car') {
+                if (topic === 'car' || topic.includes('telemetry')) {
                   messageType = 'TELEMETRY'
                 } else if (topic.includes('status')) {
                   messageType = 'STATUS'
                 } else if (topic.includes('heartbeat')) {
                   messageType = 'HEARTBEAT'
-                } else if (topic.includes('telemetry')) {
+                } else if (topic.includes('debug')) {
+                  messageType = 'DEBUG'
+                } else if (topic.includes('sensor')) {
                   messageType = 'TELEMETRY'
                 }
                 
                 // Форматируем сообщение для отображения
                 let displayText = ''
                 
-                if (messageType === 'TELEMETRY' && data.lat && data.lng) {
+                if (messageType === 'TELEMETRY' && (data.lat || data.latitude) && (data.lng || data.longitude)) {
                   // Телеметрия с координатами
-                  displayText = `📍 ${deviceId}: lat=${data.lat}, lng=${data.lng}, speed=${data.speed || 0}км/ч, battery=${data.battery || 'null'}%, temp=${data.temperature || 'null'}°C, rpm=${data.rpm || 0}`
-                  if (data.messageCount) {
-                    displayText += `, msg#${data.messageCount}`
-                  }
+                  const lat = data.lat || data.latitude
+                  const lng = data.lng || data.longitude
+                  displayText = `📍 ${deviceId}: lat=${lat}, lng=${lng}`
+                  if (data.speed !== undefined) displayText += `, speed=${data.speed}км/ч`
+                  if (data.battery !== undefined) displayText += `, battery=${data.battery}%`
+                  if (data.temperature !== undefined) displayText += `, temp=${data.temperature}°C`
+                  if (data.rpm !== undefined) displayText += `, rpm=${data.rpm}`
+                  if (data.messageCount) displayText += `, msg#${data.messageCount}`
                 } else if (messageType === 'HEARTBEAT') {
-                  // Heartbeat сообщения
-                  displayText = `💓 ${deviceId}: heartbeat, uptime=${data.uptime || 0}s, rssi=${data.rssi || 'null'}dBm, heap=${data.freeHeap || 'null'}`
+                  // Heartbeat сообщения от ESP32
+                  displayText = `💓 ${deviceId}: heartbeat`
+                  if (data.uptime !== undefined) displayText += `, uptime=${data.uptime}s`
+                  if (data.rssi !== undefined) displayText += `, rssi=${data.rssi}dBm`
+                  if (data.freeHeap !== undefined) displayText += `, heap=${data.freeHeap}`
+                  if (data.status) displayText += `, status=${data.status}`
                 } else if (messageType === 'STATUS') {
-                  // Статус сообщения
-                  displayText = `📊 ${deviceId}: status=${data.status}, rssi=${data.rssi || 'null'}dBm`
+                  // Статус сообщения ESP32
+                  displayText = `📊 ${deviceId}: status=${data.status || 'unknown'}`
+                  if (data.rssi !== undefined) displayText += `, rssi=${data.rssi}dBm`
+                  if (data.ip) displayText += `, ip=${data.ip}`
                 } else {
-                  // Любые другие данные
-                  displayText = `📡 ${deviceId}: ${messageStr.substring(0, 100)}${messageStr.length > 100 ? '...' : ''}`
+                  // Любые другие данные от ESP32
+                  displayText = `📡 ${deviceId}: ${messageStr.substring(0, 200)}${messageStr.length > 200 ? '...' : ''}`
                 }
                 
                 addMessage(messageType, deviceId, displayText, { topic, data })
@@ -451,67 +471,20 @@ const useLiveMqttDebug = () => {
           })
 
         }).catch((error) => {
-          console.error('❌ Ошибка загрузки MQTT библиотеки:', error)
-          addMessage('ERROR', 'connection', `❌ Не удалось загрузить MQTT: ${error.message}`)
-          addMessage('SYSTEM', 'connection', '🔄 Переключение в демо режим...')
-          startDemoMode()
+          console.error('❌ Ошибка загрузки MQTT.js:', error)
+          addMessage('ERROR', 'connection', `❌ Не удалось загрузить MQTT.js: ${error.message}`)
+          statistics.value.errors++
         })
 
       } catch (error) {
         console.error('❌ Ошибка подключения MQTT:', error)
         addMessage('ERROR', 'connection', `❌ Не удалось подключиться: ${error.message}`)
-        addMessage('SYSTEM', 'connection', '🔄 Переключение в демо режим...')
-        startDemoMode()
+        statistics.value.errors++
       }
     }
   }
 
-  // Демо режим с симуляцией ESP32 данных
-  const startDemoMode = () => {
-    isConnected.value = true
-    addMessage('SYSTEM', 'demo', '🎭 Демо режим активирован - симуляция ESP32 данных')
-    
-    // Симуляция подключения ESP32_Car_2046
-    setTimeout(() => {
-      addMessage('STATUS', 'ESP32_Car_2046', '📊 ESP32_Car_2046: status=active, rssi=-45dBm')
-      statistics.value.activeDevices.add('ESP32_Car_2046')
-    }, 1000)
-    
-    // Периодическая симуляция данных каждые 3-5 секунд
-    const demoInterval = setInterval(() => {
-      if (!isPaused.value && isConnected.value) {
-        const messageTypes = ['TELEMETRY', 'HEARTBEAT']
-        const type = messageTypes[Math.floor(Math.random() * messageTypes.length)]
-        
-        if (type === 'TELEMETRY') {
-          // Симуляция телеметрии
-          const lat = (55.7558 + (Math.random() - 0.5) * 0.01).toFixed(6)
-          const lng = (37.6176 + (Math.random() - 0.5) * 0.01).toFixed(6)
-          const speed = Math.floor(Math.random() * 60)
-          const battery = (80 + Math.random() * 20).toFixed(2)
-          const temp = (20 + Math.random() * 15).toFixed(1)
-          const rpm = Math.floor(Math.random() * 3000)
-          const msgCount = statistics.value.totalMessages + 1
-          
-          addMessage('TELEMETRY', 'ESP32_Car_2046', 
-            `📍 ESP32_Car_2046: lat=${lat}, lng=${lng}, speed=${speed}км/ч, battery=${battery}%, temp=${temp}°C, rpm=${rpm}, msg#${msgCount}`)
-        } else {
-          // Симуляция heartbeat
-          const uptime = Math.floor(Date.now() / 1000)
-          const rssi = -40 - Math.floor(Math.random() * 20)
-          const heap = 150000 + Math.floor(Math.random() * 50000)
-          
-          addMessage('HEARTBEAT', 'ESP32_Car_2046', 
-            `💓 ESP32_Car_2046: heartbeat, uptime=${uptime}s, rssi=${rssi}dBm, heap=${heap}`)
-        }
-        
-        statistics.value.totalMessages++
-      }
-    }, 3000 + Math.random() * 2000) // 3-5 секунд
-    
-    // Сохраняем интервал для очистки
-    client.value = { demoInterval, isDemo: true }
-  }
+
 
   // Добавление сообщения в лог
   const addMessage = (type, source, text, raw = null) => {
@@ -535,15 +508,8 @@ const useLiveMqttDebug = () => {
   // Отключение MQTT
   const disconnect = () => {
     if (client.value) {
-      if (client.value.isDemo) {
-        // Демо режим - очищаем интервал
-        clearInterval(client.value.demoInterval)
-        addMessage('SYSTEM', 'demo', '🛑 Демо режим отключен')
-      } else {
-        // Реальное MQTT соединение
-        client.value.end(true)
-        addMessage('SYSTEM', 'connection', '🛑 MQTT отключен пользователем')
-      }
+      client.value.end(true)
+      addMessage('SYSTEM', 'connection', '🛑 MQTT отключен пользователем')
       client.value = null
       isConnected.value = false
     }
@@ -565,6 +531,7 @@ const useLiveMqttDebug = () => {
     const data = {
       timestamp: new Date().toISOString(),
       broker: 'test.mosquitto.org:8081',
+      description: 'ESP32 MQTT Debug Log - MapMon v0.5',
       statistics: {
         ...statistics.value,
         activeDevices: Array.from(statistics.value.activeDevices)
@@ -579,20 +546,15 @@ const useLiveMqttDebug = () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `mqtt-live-debug-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`
+    a.download = `esp32-mqtt-debug-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
 
-  // Инициализация при создании
+  // Инициализация отладчика
   const init = () => {
-    addMessage('SYSTEM', 'init', '🚀 Live MQTT отладчик запущен')
-    
-    // Принудительно запускаем демо режим для тестирования
-    setTimeout(() => {
-      addMessage('SYSTEM', 'demo', '🎭 Автоматический запуск демо режима для тестирования')
-      startDemoMode()
-    }, 2000)
+    addMessage('SYSTEM', 'init', '🚀 ESP32 MQTT отладчик запущен')
+    addMessage('SYSTEM', 'init', 'ℹ️ Только реальные данные от ESP32 устройств')
   }
 
   // Очистка соединения
@@ -615,7 +577,7 @@ const useLiveMqttDebug = () => {
   }
 }
 
-// Используем новый live MQTT композабл
+// Используем композабл для ESP32 MQTT отладчика
 const mqttDebug = useLiveMqttDebug()
 
 // Управление lifecycle для MQTT отладчика
