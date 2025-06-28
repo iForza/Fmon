@@ -203,7 +203,7 @@
                 <label class="block text-sm text-gray-400 mb-2">Подключение</label>
                 <div class="flex space-x-2">
                   <button
-                    @click="mqttDebug.connectToMqtt"
+                    @click="mqttDebug.connectToApi"
                     :disabled="mqttDebug.isConnected"
                     class="px-3 py-2 rounded text-sm font-medium transition-colors bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
                   >
@@ -306,183 +306,89 @@ const useLiveMqttDebug = () => {
   const isConnected = ref(false)
   const isPaused = ref(false)
   const maxMessages = ref(100)
-  const client = ref(null)
+  const pollingInterval = ref(null)
 
-  // Подключение к MQTT брокеру для реальных данных от ESP32
-  const connectToMqtt = () => {
+  // Подключение к API серверу для получения данных от MQTT коллектора
+  const connectToApi = async () => {
     if (process.client && typeof window !== 'undefined') {
       try {
-        addMessage('SYSTEM', 'connection', '🔄 Подключение к test.mosquitto.org:8081...')
+        addMessage('SYSTEM', 'connection', '🔄 Подключение к API серверу...')
         
-        // Проверяем наличие MQTT библиотеки
-        import('mqtt').then((mqttModule) => {
-          const mqtt = mqttModule.default || mqttModule
+        // Проверяем доступность API
+        const response = await $fetch('/api/status')
+        if (response.status === 'API Server running with SQLite') {
+          isConnected.value = true
+          statistics.value.connections++
+          addMessage('SYSTEM', 'connection', '✅ Подключен к API серверу')
           
-          if (!mqtt || !mqtt.connect) {
-            throw new Error('MQTT.js библиотека недоступна')
-          }
-          
-          const brokerUrl = 'wss://test.mosquitto.org:8081/mqtt'
-          client.value = mqtt.connect(brokerUrl, {
-            clientId: 'mapmon-esp32-debug-' + Date.now(),
-            clean: true,
-            reconnectPeriod: 5000,
-            connectTimeout: 15000,
-            keepalive: 60,
-            protocolVersion: 4
-          })
+          // Запускаем polling для получения новых данных
+          startApiPolling()
+        } else {
+          throw new Error('API сервер недоступен')
+        }
 
-          client.value.on('connect', () => {
-            console.log('✅ MQTT WebSocket подключен к test.mosquitto.org')
-            isConnected.value = true
-            statistics.value.connections++
-            
-            addMessage('SYSTEM', 'connection', '✅ Подключен к test.mosquitto.org:8081')
-            
-            // Подписываемся на топики которые использует ESP32
-            const topics = [
-              'car',                                    // Основная телеметрия ESP32
-              'vehicles/+/telemetry',                   // Стандартная телеметрия
-              'vehicles/+/status',                      // Статусы ESP32 устройств
-              'vehicles/+/heartbeat',                   // Heartbeat от ESP32
-              'esp32/+/data',                          // Альтернативный формат ESP32
-              'esp32/+/status',                        // Статус ESP32
-              'fleet/+/telemetry',                     // Флот ESP32 устройств
-              'debug/+/+',                             // Отладочные сообщения
-              'test/+',                                // Тестовые сообщения ESP32
-              'iot/+/sensor'                           // IoT сенсоры ESP32
-            ]
-            
-            topics.forEach(topic => {
-              client.value.subscribe(topic, (err) => {
-                if (err) {
-                  addMessage('ERROR', 'subscription', `❌ Ошибка подписки на ${topic}: ${err.message}`)
-                  statistics.value.errors++
-                } else {
-                  addMessage('SYSTEM', 'subscription', `📡 Подписка на: ${topic}`)
-                }
-              })
-            })
-          })
-
-          client.value.on('message', (topic, message) => {
-            if (!isPaused.value) {
-              try {
-                const messageStr = message.toString()
-                console.log(`📡 MQTT Live от ESP32: [${topic}] ${messageStr}`)
-                
-                let data
-                try {
-                  data = JSON.parse(messageStr)
-                } catch {
-                  // Если не JSON, показываем как текст
-                  data = { raw: messageStr }
-                }
-                
-                // Определяем device_id из данных или топика
-                let deviceId = data.id || data.device_id || data.vehicle_id || data.client_id || 'ESP32_device'
-                if (deviceId === 'ESP32_device' && topic.includes('/')) {
-                  const parts = topic.split('/')
-                  if (parts.length >= 2) {
-                    deviceId = parts[1] || parts[0]
-                  }
-                }
-                
-                // Обновляем статистику
-                statistics.value.totalMessages++
-                statistics.value.activeDevices.add(deviceId)
-                
-                // Определяем тип сообщения по топику и содержимому
-                let messageType = 'MQTT'
-                if (topic === 'car' || topic.includes('telemetry')) {
-                  messageType = 'TELEMETRY'
-                } else if (topic.includes('status')) {
-                  messageType = 'STATUS'
-                } else if (topic.includes('heartbeat')) {
-                  messageType = 'HEARTBEAT'
-                } else if (topic.includes('debug')) {
-                  messageType = 'DEBUG'
-                } else if (topic.includes('sensor')) {
-                  messageType = 'TELEMETRY'
-                }
-                
-                // Форматируем сообщение для отображения
-                let displayText = ''
-                
-                if (messageType === 'TELEMETRY' && (data.lat || data.latitude) && (data.lng || data.longitude)) {
-                  // Телеметрия с координатами
-                  const lat = data.lat || data.latitude
-                  const lng = data.lng || data.longitude
-                  displayText = `📍 ${deviceId}: lat=${lat}, lng=${lng}`
-                  if (data.speed !== undefined) displayText += `, speed=${data.speed}км/ч`
-                  if (data.battery !== undefined) displayText += `, battery=${data.battery}%`
-                  if (data.temperature !== undefined) displayText += `, temp=${data.temperature}°C`
-                  if (data.rpm !== undefined) displayText += `, rpm=${data.rpm}`
-                  if (data.messageCount) displayText += `, msg#${data.messageCount}`
-                } else if (messageType === 'HEARTBEAT') {
-                  // Heartbeat сообщения от ESP32
-                  displayText = `💓 ${deviceId}: heartbeat`
-                  if (data.uptime !== undefined) displayText += `, uptime=${data.uptime}s`
-                  if (data.rssi !== undefined) displayText += `, rssi=${data.rssi}dBm`
-                  if (data.freeHeap !== undefined) displayText += `, heap=${data.freeHeap}`
-                  if (data.status) displayText += `, status=${data.status}`
-                } else if (messageType === 'STATUS') {
-                  // Статус сообщения ESP32
-                  displayText = `📊 ${deviceId}: status=${data.status || 'unknown'}`
-                  if (data.rssi !== undefined) displayText += `, rssi=${data.rssi}dBm`
-                  if (data.ip) displayText += `, ip=${data.ip}`
-                } else {
-                  // Любые другие данные от ESP32
-                  displayText = `📡 ${deviceId}: ${messageStr.substring(0, 200)}${messageStr.length > 200 ? '...' : ''}`
-                }
-                
-                addMessage(messageType, deviceId, displayText, { topic, data })
-                
-              } catch (error) {
-                statistics.value.errors++
-                addMessage('ERROR', 'mqtt', `❌ Ошибка обработки сообщения: ${error.message}`)
-                console.error('MQTT message processing error:', error)
-              }
-            }
-          })
-
-          client.value.on('error', (error) => {
-            console.error('❌ MQTT WebSocket ошибка:', error)
-            isConnected.value = false
-            statistics.value.errors++
-            addMessage('ERROR', 'connection', `❌ Ошибка MQTT: ${error.message}`)
-          })
-
-          client.value.on('close', () => {
-            console.log('🔌 MQTT WebSocket отключен')
-            isConnected.value = false
-            addMessage('SYSTEM', 'connection', '🔌 WebSocket соединение закрыто')
-          })
-
-          client.value.on('reconnect', () => {
-            console.log('🔄 MQTT WebSocket переподключение...')
-            addMessage('SYSTEM', 'connection', '🔄 Переподключение к MQTT...')
-          })
-
-          client.value.on('offline', () => {
-            console.log('📡 MQTT WebSocket offline')
-            isConnected.value = false
-            addMessage('SYSTEM', 'connection', '📡 MQTT соединение offline')
-          })
-
-        }).catch((error) => {
-          console.error('❌ Ошибка загрузки MQTT.js:', error)
-          addMessage('ERROR', 'connection', `❌ Не удалось загрузить MQTT.js: ${error.message}`)
+        } catch (error) {
+          console.error('❌ Ошибка подключения к API:', error)
+          isConnected.value = false
           statistics.value.errors++
-        })
-
-      } catch (error) {
-        console.error('❌ Ошибка подключения MQTT:', error)
-        addMessage('ERROR', 'connection', `❌ Не удалось подключиться: ${error.message}`)
-        statistics.value.errors++
+          addMessage('ERROR', 'connection', `❌ Не удалось подключиться к API: ${error.message}`)
+        }
       }
     }
   }
+
+  // Polling для получения новых данных из SQLite через API
+  const startApiPolling = () => {
+    const pollInterval = setInterval(async () => {
+      if (!isPaused.value && isConnected.value) {
+        try {
+          // Получаем последние данные телеметрии
+          const response = await $fetch('/api/telemetry/latest?limit=10')
+          const telemetryData = response.data || []
+          
+          telemetryData.forEach(item => {
+            if (item && item.vehicle_id) {
+              const deviceId = item.vehicle_id
+              
+              // Обновляем статистику
+              statistics.value.totalMessages++
+              statistics.value.activeDevices.add(deviceId)
+              
+              // Определяем тип сообщения
+              let messageType = 'TELEMETRY'
+              let displayText = ''
+              
+              if (item.lat && item.lng) {
+                // Телеметрия с координатами
+                displayText = `📍 ${deviceId}: lat=${item.lat}, lng=${item.lng}`
+                if (item.speed !== undefined) displayText += `, speed=${item.speed}км/ч`
+                if (item.battery !== undefined) displayText += `, battery=${item.battery}%`
+                if (item.temperature !== undefined) displayText += `, temp=${item.temperature}°C`
+                if (item.rpm !== undefined) displayText += `, rpm=${item.rpm}`
+              } else {
+                displayText = `📡 ${deviceId}: данные обновлены`
+              }
+              
+              addMessage(messageType, deviceId, displayText, { 
+                topic: 'api/telemetry', 
+                data: item 
+              })
+            }
+          })
+          
+        } catch (error) {
+          console.error('API polling error:', error)
+          statistics.value.errors++
+          addMessage('ERROR', 'api', `❌ Ошибка получения данных: ${error.message}`)
+        }
+      }
+    }, 3000) // Опрос каждые 3 секунды
+    
+    // Сохраняем интервал для остановки
+    pollingInterval.value = pollInterval
+  }
+
+
 
 
 
@@ -505,12 +411,12 @@ const useLiveMqttDebug = () => {
     }
   }
 
-  // Отключение MQTT
+  // Отключение от API
   const disconnect = () => {
-    if (client.value) {
-      client.value.end(true)
-      addMessage('SYSTEM', 'connection', '🛑 MQTT отключен пользователем')
-      client.value = null
+    if (pollingInterval.value) {
+      clearInterval(pollingInterval.value)
+      pollingInterval.value = null
+      addMessage('SYSTEM', 'connection', '🛑 API polling остановлен пользователем')
       isConnected.value = false
     }
   }
@@ -530,8 +436,8 @@ const useLiveMqttDebug = () => {
   const exportMessages = () => {
     const data = {
       timestamp: new Date().toISOString(),
-      broker: 'test.mosquitto.org:8081',
-      description: 'ESP32 MQTT Debug Log - MapMon v0.5',
+      source: 'API Server SQLite',
+      description: 'ESP32 Telemetry Data Log - MapMon v0.5',
       statistics: {
         ...statistics.value,
         activeDevices: Array.from(statistics.value.activeDevices)
@@ -553,8 +459,8 @@ const useLiveMqttDebug = () => {
 
   // Инициализация отладчика
   const init = () => {
-    addMessage('SYSTEM', 'init', '🚀 ESP32 MQTT отладчик запущен')
-    addMessage('SYSTEM', 'init', 'ℹ️ Только реальные данные от ESP32 устройств')
+    addMessage('SYSTEM', 'init', '🚀 ESP32 Telemetry Monitor запущен')
+    addMessage('SYSTEM', 'init', 'ℹ️ Данные от ESP32 через MQTT коллектор и SQLite')
   }
 
   // Очистка соединения
@@ -568,7 +474,7 @@ const useLiveMqttDebug = () => {
     isConnected: readonly(isConnected),
     isPaused,
     maxMessages,
-    connectToMqtt,
+    connectToApi,
     disconnect,
     clearMessages,
     exportMessages,
@@ -586,7 +492,7 @@ watch(activeTab, (newTab) => {
     // Активируем MQTT отладчик при переключении на вкладку
     mqttDebug.init()
     nextTick(() => {
-      mqttDebug.connectToMqtt()
+      mqttDebug.connectToApi()
     })
   } else {
     // Отключаем MQTT при переключении на другую вкладку

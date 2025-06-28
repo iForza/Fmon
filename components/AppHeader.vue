@@ -79,20 +79,19 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { useMqttSettings } from '~/composables/useMqttSettings'
+
 
 // Получаем API данные
 const api = useApi()
 
-// Получаем MQTT настройки
-const mqttSettings = useMqttSettings()
+// Больше не используем MQTT в веб-приложении - только API
 
 // Состояние модального окна настроек
 const isSettingsOpen = ref(false)
 
 // Состояние подключений
 const apiConnected = computed(() => api.isConnected.value)
-const mqttStatus = computed(() => mqttSettings.connectionStatus.value)
+const mqttStatus = computed(() => 'server-only') // MQTT работает только на сервере
 
 // Навигационные вкладки
 const tabs = [
@@ -107,17 +106,11 @@ const openSettings = () => {
 }
 
 const getMqttStatusText = () => {
-  switch (mqttStatus.value) {
-    case 'connected': return 'подключен'
-    case 'connecting': return 'подключение...'
-    case 'disconnected': return 'отключен'
-    case 'error': return 'ошибка'
-    default: return 'неизвестно'
-  }
+  return 'на сервере' // MQTT всегда работает на сервере
 }
 
 // Инициализация при монтировании
 onMounted(() => {
-  mqttSettings.initialize()
+  api.initialize()
 })
 </script> 

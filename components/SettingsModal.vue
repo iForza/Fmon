@@ -183,7 +183,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { useMqttSettings } from '~/composables/useMqttSettings'
+import { useApi } from '~/composables/useApi'
 
 // Пропсы
 const props = defineProps({
@@ -196,8 +196,8 @@ const props = defineProps({
 // Эмиты
 const emit = defineEmits(['update:modelValue'])
 
-// Composable для настроек MQTT
-const mqttSettings = useMqttSettings()
+// Composable для API
+const api = useApi()
 
 // Локальное состояние
 const testing = ref(false)
@@ -228,9 +228,9 @@ const isOpen = computed({
   set: (value) => emit('update:modelValue', value)
 })
 
-const connectionStatus = computed(() => mqttSettings.connectionStatus.value)
-const lastMessageTime = computed(() => mqttSettings.lastMessageTime.value)
-const activeDevices = computed(() => mqttSettings.activeDevices.value)
+const connectionStatus = computed(() => api.isConnected.value ? 'connected' : 'disconnected')
+const lastMessageTime = computed(() => 'См. API статус')
+const activeDevices = computed(() => api.vehicles.value?.size || 0)
 
 // Методы
 const closeModal = () => {
@@ -253,8 +253,12 @@ const testConnection = async () => {
   testResult.value = null
   
   try {
-    const result = await mqttSettings.testConnection(settings.value)
-    testResult.value = result
+    // Тестируем подключение к API
+    const result = await api.checkApiStatus()
+    testResult.value = {
+      success: result?.status === 'API Server running with SQLite',
+      message: result?.status || 'API недоступен'
+    }
   } catch (error) {
     testResult.value = {
       success: false,
@@ -269,12 +273,11 @@ const saveSettings = async () => {
   saving.value = true
   
   try {
-    await mqttSettings.saveSettings(settings.value)
-    
+    // Настройки API сохраняются автоматически
     // Показываем успешное сохранение
     testResult.value = {
       success: true,
-      message: 'Настройки сохранены успешно!'
+      message: 'Настройки API применены! MQTT работает на сервере.'
     }
     
     // Закрываем модальное окно через 2 секунды
@@ -285,7 +288,7 @@ const saveSettings = async () => {
   } catch (error) {
     testResult.value = {
       success: false,
-      message: error.message || 'Ошибка сохранения настроек'
+      message: error.message || 'Ошибка применения настроек'
     }
   } finally {
     saving.value = false
@@ -304,12 +307,17 @@ const resetToDefaults = () => {
   testResult.value = null
 }
 
-// Загружаем сохраненные настройки при открытии
+// Загружаем информацию об API при открытии
 watch(isOpen, (newValue) => {
   if (newValue) {
-    const saved = mqttSettings.loadSettings()
-    if (saved) {
-      settings.value = { ...saved }
+    // Настройки теперь только для отображения - MQTT работает на сервере
+    settings.value = {
+      url: 'Сервер MQTT коллектор',
+      port: '1883 (TCP для ESP32)',
+      username: 'Автоматически',
+      password: 'Автоматически',
+      clientId: 'mapmon-server-' + Date.now(),
+      topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status', 'vehicles/+/heartbeat']
     }
     testResult.value = null
   }
@@ -317,6 +325,6 @@ watch(isOpen, (newValue) => {
 
 // Инициализация
 onMounted(() => {
-  mqttSettings.initialize()
+  api.initialize()
 })
 </script> 

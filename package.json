@@ -8,21 +8,24 @@
     "dev:api": "tsx server/index.ts",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:api\"",
     "build": "nuxt build",
-    "preview": "nuxt preview"
+    "preview": "nuxt preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.1",
     "@nuxt/icon": "^1.5.5",
-    "@nuxt/ui": "^2.22.0",
-    "apexcharts": "^4.7.0",
+        "@nuxt/ui": "^2.22.0",
     "better-sqlite3": "^11.10.0",
     "echarts": "^5.5.0",
     "fastify": "^5.4.0",
     "maplibre-gl": "^5.6.0",
     "mqtt": "^5.13.1",
     "nuxt": "^3.13.0",
-    "vue": "^3.5.12",
-    "vue3-apexcharts": "^1.8.0"
+        "vue": "^3.5.12"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
