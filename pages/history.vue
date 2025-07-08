@@ -337,7 +337,6 @@ const useLiveMqttDebug = () => {
         }
       }
     }
-  }
 
   // Polling для получения новых данных из SQLite через API
   const startApiPolling = () => {
