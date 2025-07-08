@@ -29,6 +29,10 @@ export const useApi = () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   const wsConnection = ref<WebSocket | null>(null)
+  
+  // Хранение интервалов для очистки
+  let pollingInterval: NodeJS.Timeout | null = null
+  let reconnectTimeout: NodeJS.Timeout | null = null
 
   // API базовый URL
   const apiBase = '/api'
@@ -169,8 +173,12 @@ export const useApi = () => {
 
         wsConnection.value.onclose = () => {
           console.log('❌ WebSocket disconnected')
+          // Очищаем предыдущий timeout переподключения
+          if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout)
+          }
           // Переподключение через 5 секунд
-          setTimeout(connectWebSocket, 5000)
+          reconnectTimeout = setTimeout(connectWebSocket, 5000)
         }
 
         wsConnection.value.onerror = (err) => {
@@ -187,6 +195,12 @@ export const useApi = () => {
     if (wsConnection.value) {
       wsConnection.value.close()
       wsConnection.value = null
+    }
+    
+    // Очищаем timeout переподключения
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout)
+      reconnectTimeout = null
     }
   }
 
@@ -214,7 +228,10 @@ export const useApi = () => {
 
   // Автоматическое обновление данных каждые 5 секунд
   const startPolling = () => {
-    const pollInterval = setInterval(async () => {
+    // Останавливаем предыдущий polling если он существует
+    stopPolling()
+    
+    pollingInterval = setInterval(async () => {
       if (isConnected.value) {
         await fetchTelemetry()
       }
@@ -223,16 +240,27 @@ export const useApi = () => {
     // Очистка при размонтировании компонента (только если есть активный компонент)
     if (getCurrentInstance()) {
       onUnmounted(() => {
-        clearInterval(pollInterval)
+        stopPolling()
         disconnectWebSocket()
       })
     }
 
     // Возвращаем функцию для ручной очистки
-    return () => {
-      clearInterval(pollInterval)
-      disconnectWebSocket()
+    return stopPolling
+  }
+
+  // Остановка polling
+  const stopPolling = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      pollingInterval = null
     }
+  }
+
+  // Полная очистка ресурсов
+  const cleanup = () => {
+    stopPolling()
+    disconnectWebSocket()
   }
 
   // Вычисляемые свойства
@@ -267,8 +295,10 @@ export const useApi = () => {
     checkApiStatus,
     initialize,
     startPolling,
+    stopPolling,
     connectWebSocket,
     disconnectWebSocket,
+    cleanup,
     
     // Вычисляемые свойства
     allVehicles,

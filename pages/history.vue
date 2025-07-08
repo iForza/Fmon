@@ -272,26 +272,28 @@ const formatTime = (timestamp) => {
   return new Date(timestamp).toLocaleTimeString('ru-RU')
 }
 
-// Переменные для отслеживания соединений
-let pollingInterval = null
-let wsConnection = null
+// Переменная для хранения функции очистки API
+let apiCleanup = null
 
 // Lifecycle
 onMounted(async () => {
   // Инициализируем API для получения истории
   await api.initialize()
   
-  // Запускаем опрос данных для вкладки "История"
-  api.startPolling()
+  // Запускаем опрос данных для вкладки "История" и сохраняем функцию очистки
+  apiCleanup = api.startPolling()
 })
 
 onUnmounted(() => {
-  if (pollingInterval) {
-    clearInterval(pollingInterval)
+  console.log('🧹 Очистка ресурсов history.vue')
+  
+  // Останавливаем API polling
+  if (apiCleanup) {
+    apiCleanup()
   }
-  if (wsConnection) {
-    wsConnection.close()
-  }
+  
+  // Дополнительно вызываем общую очистку
+  api.cleanup()
 })
 
 // Composable для Live MQTT мониторинга ESP32

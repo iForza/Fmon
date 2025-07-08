@@ -273,9 +273,15 @@ export const useChartData = () => {
     fetchChartData()
   }
 
+  // Переменная для хранения интервала
+  let autoUpdateInterval: NodeJS.Timeout | null = null
+
   // Автоматическое обновление данных каждые 5 секунд
   const startAutoUpdate = () => {
-    const interval = setInterval(() => {
+    // Останавливаем предыдущий интервал если он существует
+    stopAutoUpdate()
+    
+    autoUpdateInterval = setInterval(() => {
       if (!isLoading.value) {
         fetchChartData()
       }
@@ -284,12 +290,20 @@ export const useChartData = () => {
     // Очистка интервала при размонтировании (только если есть активный компонент)
     if (getCurrentInstance()) {
       onUnmounted(() => {
-        clearInterval(interval)
+        stopAutoUpdate()
       })
     }
 
     // Возвращаем функцию для ручной очистки
-    return () => clearInterval(interval)
+    return stopAutoUpdate
+  }
+
+  // Остановка автоматического обновления
+  const stopAutoUpdate = () => {
+    if (autoUpdateInterval) {
+      clearInterval(autoUpdateInterval)
+      autoUpdateInterval = null
+    }
   }
 
   // Очистка устаревших данных из кеша
@@ -340,6 +354,7 @@ export const useChartData = () => {
     setTimeRange,
     setSelectedVehicle,
     startAutoUpdate,
+    stopAutoUpdate,
     
     // Вычисляемые свойства
     currentTimeRange,

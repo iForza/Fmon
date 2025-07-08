@@ -186,7 +186,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useChartData } from '~/composables/useChartData'
 
@@ -245,6 +245,9 @@ const temperatureChartData = computed(() => chartData.getChartSeries('temperatur
 const batteryChartData = computed(() => chartData.getChartSeries('battery'))
 const rpmChartData = computed(() => chartData.getChartSeries('rpm'))
 
+// Переменная для хранения функции очистки
+let cleanupChartAutoUpdate = null
+
 // Инициализация
 onMounted(async () => {
   console.log('Analytics: Страница с ECharts загружена')
@@ -257,8 +260,18 @@ onMounted(async () => {
   // Загружаем начальные данные графиков
   await chartData.fetchChartData()
   
-  // Запускаем автоматическое обновление
-  chartData.startAutoUpdate()
+  // Запускаем автоматическое обновление и сохраняем функцию очистки
+  cleanupChartAutoUpdate = chartData.startAutoUpdate()
+})
+
+// Очистка ресурсов при размонтировании
+onUnmounted(() => {
+  console.log('🧹 Очистка ресурсов analytics.vue')
+  
+  // Останавливаем автоматическое обновление графиков
+  if (cleanupChartAutoUpdate) {
+    cleanupChartAutoUpdate()
+  }
 })
 
 // Метаданные страницы

@@ -156,7 +156,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useTime } from '~/composables/useTime'
 
@@ -209,6 +209,12 @@ onMounted(async () => {
   api.startPolling()
   
   console.log('✅ MapMon готов к работе')
+})
+
+// Очистка ресурсов при размонтировании
+onUnmounted(() => {
+  console.log('🧹 Очистка ресурсов app.vue')
+  api.cleanup()
 })
 
 // Метаданные страницы
