@@ -46,10 +46,19 @@
 *This section will be updated as successful solutions are discovered*
 
 ### Connection Methods
-- TBD based on successful implementations
+- SSH работает лучше токенов для git операций
+- HTTP API polling работает стабильнее WebSocket MQTT
 
 ### Server Commands
-- TBD based on successful runs
+- `npm run dev` - успешный запуск frontend разработки
+- `npm run dev:full` - concurrent frontend + API для полной разработки
+
+### Frontend Memory Management
+- ✅ **РЕШЕНО**: Утечки памяти в polling исправлены (2025-01-08)
+  - Добавлены переменные для отслеживания интервалов
+  - Реализованы функции stopPolling() и cleanup() 
+  - Все компоненты теперь правильно очищают ресурсы в onUnmounted
 
 ### Deployment Procedures
-- TBD based on successful deployments
+- PM2 с отдельными процессами работает лучше cluster mode
+- Backup ветки перед критическими изменениями обязательны
