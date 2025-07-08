@@ -48,6 +48,10 @@
 ### Connection Methods
 - SSH работает лучше токенов для git операций
 - HTTP API polling работает стабильнее WebSocket MQTT
+- ✅ **РЕШЕНО**: GitHub интеграция работает (2025-01-08)
+  - git push origin master успешно загружает изменения
+  - Репозиторий: https://github.com/iForza/Fmon.git
+  - Claude Code умеет работать с git командами
 
 ### Server Commands
 - `npm run dev` - успешный запуск frontend разработки
@@ -62,3 +66,22 @@
 ### Deployment Procedures
 - PM2 с отдельными процессами работает лучше cluster mode
 - Backup ветки перед критическими изменениями обязательны
+- ✅ **РЕШЕНО**: VPS обновление через GitHub (2025-01-08)
+  - git pull origin master для получения изменений на VPS
+  - Создан VPS_UPDATE_INSTRUCTIONS_v2.md с полными инструкциями
+  - Процедура: backup → git pull → npm ci → npm run build → pm2 restart
+
+### VPS Диагностика (2025-01-08)
+- ✅ **УСПЕШНО**: Диагностические команды VPS выполнены
+  - uname -a, free -h, df -h - системная информация
+  - find команды - нашли проект в /var/www/mapmon/
+  - pm2 status - все процессы online 3+ дня стабильно
+  - netstat -tulpn - порты 3000,3001 работают
+  - curl localhost:3001/api/status - API отвечает корректно
+  - Сервер Ubuntu 22.04.5 LTS, Node.js v20.19.2, PM2 v6.0.8
+
+### VPS Проблемы для исправления:
+- ⚠️ Git НЕ настроен в /var/www/mapmon/ (нужно инициализировать)
+- ⚠️ База данных местоположение неясно (не в server-backup/)  
+- ⚠️ SSR ошибки в pages/history.vue:86
+- ⚠️ MQTT timeout ошибки (не критично для отладки)

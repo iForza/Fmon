@@ -1,0 +1,343 @@
+PS C:\Users\user> ssh root@147.45.213.22
+root@147.45.213.22's password:
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-141-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Tue Jul  8 02:50:07 PM MSK 2025
+
+  System load:  0.12               Processes:             107
+  Usage of /:   29.2% of 29.44GB   Users logged in:       0
+  Memory usage: 24%                IPv4 address for eth0: 147.45.213.22
+  Swap usage:   0%                 IPv6 address for eth0: 2a03:6f00:a::9885
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+3 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+1 additional security update can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+Last login: Sat Jul  5 10:19:19 2025 from 188.162.186.118
+root@5018543-bi97187:~#   uname -a
+  cat /etc/os-release
+  free -h
+  df -h
+Linux 5018543-bi97187 5.15.0-141-generic #151-Ubuntu SMP Sun May 18 21:35:19 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="22.04"
+VERSION="22.04.5 LTS (Jammy Jellyfish)"
+VERSION_CODENAME=jammy
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=jammy
+               total        used        free      shared  buff/cache   available
+Mem:           1.9Gi       398Mi       404Mi       1.0Mi       1.1Gi       1.3Gi
+Swap:             0B          0B          0B
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs           197M  1.0M  196M   1% /run
+/dev/sda1        30G  8.6G   21G  30% /
+tmpfs           982M     0  982M   0% /dev/shm
+tmpfs           5.0M     0  5.0M   0% /run/lock
+tmpfs           197M  4.0K  197M   1% /run/user/0
+root@5018543-bi97187:~#   find / -name "*mon*" -type d 2>/dev/null | head -20
+  find / -name "package.json" 2>/dev/null | grep -E "(mapmon|fmon|fleet)" | head -10
+  ls -la /root/
+  ls -la /home/
+/root/snap/lxd/common
+/root/.mongodb
+/root/.mongodb/mongosh
+/sys/kernel/tracing/events/devfreq/devfreq_monitor
+/sys/kernel/tracing/events/hwmon
+/sys/kernel/tracing/events/hwmon/hwmon_attr_show
+/sys/kernel/tracing/events/hwmon/hwmon_attr_store
+/sys/kernel/tracing/events/hwmon/hwmon_attr_show_string
+/sys/kernel/debug/tracing/events/devfreq/devfreq_monitor
+/sys/kernel/debug/tracing/events/hwmon
+/sys/kernel/debug/tracing/events/hwmon/hwmon_attr_show
+/sys/kernel/debug/tracing/events/hwmon/hwmon_attr_store
+/sys/kernel/debug/tracing/events/hwmon/hwmon_attr_show_string
+/sys/class/hwmon
+/sys/fs/cgroup/system.slice/mongod.service
+/sys/module/slab_common
+/sys/module/intel_rapl_common
+/snap/lxd/29351/lxc/config/common.conf.d
+/snap/lxd/31333/lxc/config/common.conf.d
+/snap/core20/2599/usr/lib/python3.8/venv/scripts/common
+/var/www/mapmon-backend/node_modules/colorspace/package.json
+/var/www/mapmon-backend/node_modules/fb-watchman/package.json
+/var/www/mapmon-backend/node_modules/ws/package.json
+/var/www/mapmon-backend/node_modules/micromatch/package.json
+/var/www/mapmon-backend/node_modules/escalade/package.json
+/var/www/mapmon-backend/node_modules/@jridgewell/set-array/package.json
+/var/www/mapmon-backend/node_modules/@jridgewell/trace-mapping/package.json
+/var/www/mapmon-backend/node_modules/@jridgewell/resolve-uri/package.json
+/var/www/mapmon-backend/node_modules/@jridgewell/sourcemap-codec/package.json
+/var/www/mapmon-backend/node_modules/@jridgewell/gen-mapping/package.json
+total 124
+drwx------ 11 root root  4096 Jul  5 12:31 .
+drwxr-xr-x 20 root root  4096 Jul  4 18:20 ..
+drwx------  3 root root  4096 Jun  9 12:21 .ansible
+-rw-------  1 root root 58240 Jul  5 12:31 .bash_history
+-rw-r--r--  1 root root  3106 Oct 15  2021 .bashrc
+drwx------  2 root root  4096 Jun  9 12:21 .cache
+drwx------  3 root root  4096 Jun 17 14:38 .config
+-rw-------  1 root root    20 Jul  5 08:16 .lesshst
+drwxr-xr-x  3 root root  4096 Jun 16 16:07 .local
+drwx------  3 root root  4096 Jun 16 16:15 .mongodb
+drwxr-xr-x  5 root root  4096 Jun 19 07:28 .npm
+-rw-r--r--  1 root root    76 Jun 16 03:36 .nuxtrc
+drwxr-xr-x  5 root root  4096 Jul  4 18:20 .pm2
+-rw-r--r--  1 root root   161 Jul  9  2019 .profile
+-rw-r--r--  1 root root  1679 Jun 16 03:20 resize.log
+drwx------  3 root root  4096 Jun  9 12:20 snap
+drwx------  2 root root  4096 Jun 17 00:53 .ssh
+total 8
+drwxr-xr-x  2 root root 4096 Jun  9 12:26 .
+drwxr-xr-x 20 root root 4096 Jul  4 18:20 ..
+root@5018543-bi97187:~#   pm2 status
+  pm2 list
+┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ mapmon            │ default     │ 0.7.0   │ cluster │ 6663     │ 3D     │ 1    │ online    │ 0%       │ 94.0mb   │ root     │ disabled │
+│ 1  │ mapmon-api        │ default     │ 0.7.0   │ cluster │ 6664     │ 3D     │ 1    │ online    │ 0%       │ 69.9mb   │ root     │ disabled │
+│ 2  │ mqtt-collector    │ default     │ 0.7.0   │ cluster │ 6677     │ 3D     │ 1    │ online    │ 0%       │ 78.4mb   │ root     │ disabled │
+└────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ mapmon            │ default     │ 0.7.0   │ cluster │ 6663     │ 3D     │ 1    │ online    │ 0%       │ 94.0mb   │ root     │ disabled │
+│ 1  │ mapmon-api        │ default     │ 0.7.0   │ cluster │ 6664     │ 3D     │ 1    │ online    │ 0%       │ 69.9mb   │ root     │ disabled │
+│ 2  │ mqtt-collector    │ default     │ 0.7.0   │ cluster │ 6677     │ 3D     │ 1    │ online    │ 0%       │ 78.4mb   │ root     │ disabled │
+└────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@5018543-bi97187:~#   ps aux | grep node
+  ps aux | grep pm2
+root        6663  0.1  4.7 11541756 95868 ?      Sl   Jul05   7:56 node /var/www/mapmon/.output/server/index.mjs
+root        6664  0.2  3.5 1238084 71620 ?       Sl   Jul05  10:42 node /var/www/mapmon/server-backup/api-server.cjs
+root        6677  0.1  3.9 1245516 79856 ?       Sl   Jul05   7:53 node /var/www/mapmon/server-backup/mqtt-collector.cjs
+root       52033  0.0  0.1   6612  2288 pts/0    S+   14:50   0:00 grep --color=auto node
+root         844  0.0  2.9 1168172 59048 ?       Ssl  Jul04   4:49 PM2 v6.0.8: God Daemon (/root/.pm2)
+root       52035  0.0  0.1   6612  2196 pts/0    S+   14:50   0:00 grep --color=auto pm2
+root@5018543-bi97187:~#   netstat -tulpn | grep :300
+  lsof -i :3000
+  lsof -i :3001
+tcp        0      0 0.0.0.0:3001            0.0.0.0:*               LISTEN      844/PM2 v6.0.8: God
+tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      844/PM2 v6.0.8: God
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+PM2\x20v6 844 root   31u  IPv4  94637      0t0  TCP *:3000 (LISTEN)
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+PM2\x20v6 844 root   32u  IPv4  94646      0t0  TCP *:3001 (LISTEN)
+root@5018543-bi97187:~#   pwd
+  ls -la
+  git remote -v
+  git status
+  git log --oneline -3
+/root
+total 124
+drwx------ 11 root root  4096 Jul  5 12:31 .
+drwxr-xr-x 20 root root  4096 Jul  4 18:20 ..
+drwx------  3 root root  4096 Jun  9 12:21 .ansible
+-rw-------  1 root root 58240 Jul  5 12:31 .bash_history
+-rw-r--r--  1 root root  3106 Oct 15  2021 .bashrc
+drwx------  2 root root  4096 Jun  9 12:21 .cache
+drwx------  3 root root  4096 Jun 17 14:38 .config
+-rw-------  1 root root    20 Jul  5 08:16 .lesshst
+drwxr-xr-x  3 root root  4096 Jun 16 16:07 .local
+drwx------  3 root root  4096 Jun 16 16:15 .mongodb
+drwxr-xr-x  5 root root  4096 Jun 19 07:28 .npm
+-rw-r--r--  1 root root    76 Jun 16 03:36 .nuxtrc
+drwxr-xr-x  5 root root  4096 Jul  4 18:20 .pm2
+-rw-r--r--  1 root root   161 Jul  9  2019 .profile
+-rw-r--r--  1 root root  1679 Jun 16 03:20 resize.log
+drwx------  3 root root  4096 Jun  9 12:20 snap
+drwx------  2 root root  4096 Jun 17 00:53 .ssh
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+root@5018543-bi97187:~#   cat package.json | head -20
+  ls -la ecosystem.config.*
+  ls -la .env*
+  ls -la server-backup/
+cat: package.json: No such file or directory
+ls: cannot access 'ecosystem.config.*': No such file or directory
+ls: cannot access '.env*': No such file or directory
+ls: cannot access 'server-backup/': No such file or directory
+root@5018543-bi97187:~#   pm2 logs --lines 20
+[TAILING] Tailing last 20 lines for [all] processes (change the value with --lines option)
+/root/.pm2/pm2.log last 20 lines:
+PM2        | 2025-07-05T08:22:28: PM2 log: App [mapmon-api:1] online
+PM2        | 2025-07-05T08:22:28: PM2 log: App [mqtt-collector:2] online
+PM2        | 2025-07-05T10:19:23: PM2 log: Stopping app:mapmon id:0
+PM2        | 2025-07-05T10:19:23: PM2 log: Stopping app:mapmon-api id:1
+PM2        | 2025-07-05T10:19:23: PM2 log: App name:mapmon-api id:1 disconnected
+PM2        | 2025-07-05T10:19:23: PM2 log: App [mapmon-api:1] exited with code [0] via signal [SIGINT]
+PM2        | 2025-07-05T10:19:23: PM2 log: App name:mapmon id:0 disconnected
+PM2        | 2025-07-05T10:19:23: PM2 log: App [mapmon:0] exited with code [0] via signal [SIGINT]
+PM2        | 2025-07-05T10:19:23: PM2 log: pid=5524 msg=process killed
+PM2        | 2025-07-05T10:19:23: PM2 log: Stopping app:mqtt-collector id:2
+PM2        | 2025-07-05T10:19:23: PM2 log: pid=5523 msg=process killed
+PM2        | 2025-07-05T10:19:23: PM2 log: App name:mqtt-collector id:2 disconnected
+PM2        | 2025-07-05T10:19:23: PM2 log: App [mqtt-collector:2] exited with code [0] via signal [SIGINT]
+PM2        | 2025-07-05T10:19:23: PM2 log: pid=5537 msg=process killed
+PM2        | 2025-07-05T10:19:24: PM2 log: App [mapmon:0] starting in -cluster mode-
+PM2        | 2025-07-05T10:19:24: PM2 log: App [mapmon-api:1] starting in -cluster mode-
+PM2        | 2025-07-05T10:19:24: PM2 log: App [mapmon:0] online
+PM2        | 2025-07-05T10:19:24: PM2 log: App [mqtt-collector:2] starting in -cluster mode-
+PM2        | 2025-07-05T10:19:24: PM2 log: App [mapmon-api:1] online
+PM2        | 2025-07-05T10:19:24: PM2 log: App [mqtt-collector:2] online
+
+/var/www/mapmon/logs/api-error-1.log last 20 lines:
+/var/www/mapmon/logs/mapmon-error-0.log last 20 lines:
+0|mapmon   |     at renderComponentVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:394:12)
+0|mapmon   |     at renderVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:507:14)
+0|mapmon   |     at renderComponentSubTree (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:459:7)
+0|mapmon   |     at renderComponentVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:394:12)
+0|mapmon   |     at renderVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:507:14)
+0|mapmon   |     at renderVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:511:9)
+0|mapmon   |     at renderComponentSubTree (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:459:7)
+0|mapmon   |     at renderComponentVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:394:12)
+0|mapmon   | 2025-06-27T16:51:49: [unhandledRejection] TypeError: Cannot read properties of undefined (reading 'size')
+0|mapmon   |     at file:///var/www/mapmon/pages/history.vue:86:87
+0|mapmon   |     at renderComponentSubTree (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:444:9)
+0|mapmon   |     at renderComponentVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:394:12)
+0|mapmon   |     at renderVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:507:14)
+0|mapmon   |     at renderComponentSubTree (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:459:7)
+0|mapmon   |     at renderComponentVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:394:12)
+0|mapmon   |     at renderVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:507:14)
+0|mapmon   |     at renderVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:511:9)
+0|mapmon   |     at renderComponentSubTree (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:459:7)
+0|mapmon   |     at renderComponentVNode (/var/www/mapmon/.output/server/node_modules/@vue/server-renderer/dist/server-renderer.cjs.prod.js:394:12)
+0|mapmon   | 2025-06-27T17:56:21: [nuxt] `setInterval` should not be used on the server. Consider wrapping it with an `onNuxtReady`, `onBeforeMount` or `onMounted` lifecycle hook, or ensure you only call it in the browser by checking `false`.
+
+/var/www/mapmon/logs/mapmon-out-0.log last 20 lines:
+0|mapmon   | 2025-06-26T22:16:56: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-26T23:00:04: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-26T23:19:02: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-26T23:40:35: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-27T00:16:16: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-27T08:48:03: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-27T14:55:03: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-27T16:31:27: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-27T16:41:31: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-27T16:50:25: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-27T16:58:08: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-27T17:55:54: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-27T18:22:16: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-06-28T11:26:42: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-07-04T18:20:24: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-07-05T01:17:30: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-07-05T08:13:55: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-07-05T08:17:54: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-07-05T08:22:29: Listening on http://0.0.0.0:3000
+0|mapmon   | 2025-07-05T10:19:26: Listening on http://0.0.0.0:3000
+
+/var/www/mapmon/logs/mqtt-error-2.log last 20 lines:
+2|mqtt-col | 2025-06-26T22:27:47: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:28:18: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:28:49: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:29:20: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:29:51: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:30:22: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:30:53: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:31:24: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:31:55: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:32:26: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:32:57: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:33:28: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:33:59: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:34:30: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:35:01: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:35:32: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:36:03: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-27T15:08:47: ❌ MQTT Error: Keepalive timeout
+2|mqtt-col | 2025-07-06T20:54:19: ❌ MQTT Error: read ECONNRESET
+2|mqtt-col | 2025-07-08T07:30:18: ❌ MQTT Error: read ECONNRESET
+
+/var/www/mapmon/logs/mqtt-out-2.log last 20 lines:
+2|mqtt-col |   device_id: 'ESP32_Car_2046',
+2|mqtt-col |   vehicle_id: 'ESP32_Car_2046',
+2|mqtt-col |   status: 'stopped'
+2|mqtt-col | }
+2|mqtt-col | 2025-07-07T21:10:20: 💾 SAVED TO SQLITE - ID: 9985
+2|mqtt-col | 2025-07-07T21:10:20: 💾 Saved: OK
+2|mqtt-col | 2025-07-08T07:30:23: ✅ MQTT Connected - Eclipse Mosquitto
+2|mqtt-col | 2025-07-08T07:30:23: 📡 Subscribed to all ESP32 topics
+2|mqtt-col | 2025-07-08T07:30:24: 📡 MQTT Received topic: vehicles/ESP32_Car_2046/status, message: {"id":"ESP32_Car_2046","status":"connected","timestamp":466073,"rssi":-55,"broker":"Eclipse Mosquitto"}
+2|mqtt-col | 2025-07-08T07:30:24: 📊 Processed data for device ESP32_Car_2046: {
+2|mqtt-col |   id: 'ESP32_Car_2046',
+2|mqtt-col |   status: 'connected',
+2|mqtt-col |   timestamp: 466073,
+2|mqtt-col |   rssi: -55,
+2|mqtt-col |   broker: 'Eclipse Mosquitto',
+2|mqtt-col |   device_id: 'ESP32_Car_2046',
+2|mqtt-col |   vehicle_id: 'ESP32_Car_2046'
+2|mqtt-col | }
+2|mqtt-col | 2025-07-08T07:30:24: 💾 SAVED TO SQLITE - ID: 9986
+2|mqtt-col | 2025-07-08T07:30:24: 💾 Saved: OK
+
+/var/www/mapmon/logs/api-out-1.log last 20 lines:
+1|mapmon-a | tatus","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":33116},"msg":"incoming request"}
+1|mapmon-a | 2025-07-08T10:33:25: {"level":30,"time":1751960005739,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9h","res":{"statusCode":200},"responseTime":1.0082799792289734,"msg":"request completed"}
+1|mapmon-a | 2025-07-08T10:34:25: {"level":30,"time":1751960065587,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9i","req":{"method":"GET","url":"/api/mqtt/status","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":47638},"msg":"incoming request"}
+1|mapmon-a | 2025-07-08T10:34:25: {"level":30,"time":1751960065589,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9i","res":{"statusCode":200},"responseTime":1.7364410161972046,"msg":"request completed"}
+1|mapmon-a | 2025-07-08T10:34:25: {"level":30,"time":1751960065590,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9j","req":{"method":"GET","url":"/api/telemetry/history?range=10min","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":47640},"msg":"incoming request"}
+1|mapmon-a | 2025-07-08T10:34:25: {"level":30,"time":1751960065591,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9j","res":{"statusCode":200},"responseTime":0.44929295778274536,"msg":"request completed"}
+1|mapmon-a | 2025-07-08T10:34:25: {"level":30,"time":1751960065592,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9k","req":{"method":"GET","url":"/api/telemetry/latest","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":47656},"msg":"incoming request"}
+1|mapmon-a | 2025-07-08T10:34:25: {"level":30,"time":1751960065593,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9k","res":{"statusCode":200},"responseTime":1.3922210335731506,"msg":"request completed"}
+1|mapmon-a | 2025-07-08T10:34:25: {"level":30,"time":1751960065742,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9l","req":{"method":"GET","url":"/api/mqtt/status","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":47672},"msg":"incoming request"}
+1|mapmon-a | 2025-07-08T10:34:25: {"level":30,"time":1751960065743,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9l","res":{"statusCode":200},"responseTime":0.8792740106582642,"msg":"request completed"}
+1|mapmon-a | 2025-07-08T10:34:56: {"level":30,"time":1751960096845,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9m","req":{"method":"GET","url":"/api/telemetry/latest","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":52378},"msg":"incoming request"}
+1|mapmon-a | 2025-07-08T10:34:56: {"level":30,"time":1751960096847,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9m","res":{"statusCode":200},"responseTime":1.1023550033569336,"msg":"request completed"}
+1|mapmon-a | 2025-07-08T10:34:56: {"level":30,"time":1751960096847,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9n","req":{"method":"GET","url":"/api/telemetry/history?range=10min","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":52380},"msg":"incoming request"}
+1|mapmon-a | 2025-07-08T10:34:56: {"level":30,"time":1751960096848,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9n","res":{"statusCode":200},"responseTime":0.30231600999832153,"msg":"request completed"}
+1|mapmon-a | 2025-07-08T10:34:56: {"level":30,"time":1751960096848,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9o","req":{"method":"GET","url":"/api/mqtt/status","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":52390},"msg":"incoming request"}
+1|mapmon-a | 2025-07-08T10:34:56: {"level":30,"time":1751960096849,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9o","res":{"statusCode":200},"responseTime":0.7009080052375793,"msg":"request completed"}
+1|mapmon-a | 2025-07-08T10:34:57: {"level":30,"time":1751960097010,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9p","req":{"method":"GET","url":"/api/mqtt/status","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":52400},"msg":"incoming request"}
+1|mapmon-a | 2025-07-08T10:34:57: {"level":30,"time":1751960097012,"pid":6664,"hostname":"5018543-bi97187","reqId":"req-d9p","res":{"statusCode":200},"responseTime":0.8995879888534546,"msg":"request completed"}
+
+^C
+root@5018543-bi97187:~# journalctl -u pm2* --lines 10 --no-pager
+Jul 04 18:20:19 5018543-bi97187 pm2[674]: [PM2] Process /var/www/mapmon/server-backup/api-server.cjs restored
+Jul 04 18:20:19 5018543-bi97187 pm2[674]: [PM2] Process /var/www/mapmon/server-backup/mqtt-collector.cjs restored
+Jul 04 18:20:19 5018543-bi97187 pm2[674]: ┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+Jul 04 18:20:19 5018543-bi97187 pm2[674]: │ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+Jul 04 18:20:19 5018543-bi97187 pm2[674]: ├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+Jul 04 18:20:19 5018543-bi97187 pm2[674]: │ 0  │ mapmon            │ default     │ 0.7.0   │ cluster │ 865      │ 1s     │ 0    │ online    │ 0%       │ 45.4mb   │ root     │ disabled │
+Jul 04 18:20:19 5018543-bi97187 pm2[674]: │ 1  │ mapmon-api        │ default     │ 0.7.0   │ cluster │ 866      │ 1s     │ 0    │ online    │ 0%       │ 45.4mb   │ root     │ disabled │
+Jul 04 18:20:19 5018543-bi97187 pm2[674]: │ 2  │ mqtt-collector    │ default     │ 0.7.0   │ cluster │ 879      │ 0s     │ 0    │ online    │ 0%       │ 39.7mb   │ root     │ disabled │
+Jul 04 18:20:19 5018543-bi97187 pm2[674]: └────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Jul 04 18:20:20 5018543-bi97187 systemd[1]: Started PM2 process manager.
+root@5018543-bi97187:~#   curl -s http://localhost:3001/api/status
+  curl -s http://localhost:3000 | head -5
+{"status":"API Server running with SQLite","timestamp":"2025-07-08T11:51:40.557Z","database":"SQLite"}<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style id="nuxt-ui-colors">:root {
+--color-primary-50: 240 253 244;
+--color-primary-100: 220 252 231;
+root@5018543-bi97187:~# ls -la server-backup/mapmon.db 2>/dev/null || echo "База не найдена"
+База не найдена
+root@5018543-bi97187:~# node --version
+v20.19.2
+root@5018543-bi97187:~#   npm --version
+  pm2 --version
+10.8.2
+6.0.8
+root@5018543-bi97187:~#   git --version
+  git config --list | grep user
+git version 2.34.1
+root@5018543-bi97187:~#
