@@ -335,7 +335,7 @@ const useLiveMqttDebug = () => {
           addMessage('ERROR', 'connection', `❌ Не удалось подключиться к API: ${error.message}`)
         }
       }
-    }
+  }
 
   // Polling для получения новых данных из SQLite через API
   const startApiPolling = () => {
