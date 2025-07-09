@@ -41,7 +41,7 @@
 
     <!-- Контейнер карты -->
     <div class="flex-1 relative">
-      <MapComponentFree 
+      <MapComponent 
         ref="mapComponent" 
         :vehicles="props.vehicles"
         :selectedVehicleId="props.selectedVehicleId"
