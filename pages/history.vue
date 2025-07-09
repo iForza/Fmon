@@ -328,8 +328,7 @@ const useLiveMqttDebug = () => {
         } else {
           throw new Error('API сервер недоступен')
         }
-
-        } catch (error) {
+      } catch (error) {
           console.error('❌ Ошибка подключения к API:', error)
           isConnected.value = false
           statistics.value.errors++
@@ -337,6 +336,7 @@ const useLiveMqttDebug = () => {
         }
       }
     }
+  }
 
   // Polling для получения новых данных из SQLite через API
   const startApiPolling = () => {
