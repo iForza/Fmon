@@ -295,7 +295,9 @@ onUnmounted(() => {
   // Дополнительно вызываем общую очистку
   api.cleanup()
 })
+</script>
 
+<script>
 // Composable для Live MQTT мониторинга ESP32
 const useLiveMqttDebug = () => {
   const messages = ref([])
@@ -483,7 +485,9 @@ const useLiveMqttDebug = () => {
     cleanup
   }
 }
+</script>
 
+<script setup>
 // Используем композабл для ESP32 MQTT отладчика
 const mqttDebug = useLiveMqttDebug()
 
