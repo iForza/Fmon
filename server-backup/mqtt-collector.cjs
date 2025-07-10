@@ -77,11 +77,23 @@ client.on('message', (topic, message) => {
         
         console.log(`📊 Processed data for device ${deviceId}:`, data);
         
-        const result = db.saveTelemetry(data);
-        console.log('💾 Saved:', result.success ? 'OK' : 'ERROR');
+        // Фильтруем heartbeat и status сообщения - не сохраняем их в телеметрию
+        if (data.type === 'heartbeat' || topic.includes('/heartbeat') || topic.includes('/status')) {
+            console.log('💓 Heartbeat/Status message - skipping telemetry save');
+            return;
+        }
         
-        if (!result.success) {
-            console.error('💾 Save error details:', result.error);
+        // Сохраняем только полноценные телеметрические данные
+        if (data.lat !== undefined && data.lng !== undefined && data.speed !== undefined) {
+            const result = db.saveTelemetry(data);
+            console.log('💾 SAVED TO SQLITE - ID:', result.lastID || 'unknown');
+            console.log('💾 Saved:', result.success ? 'OK' : 'ERROR');
+            
+            if (!result.success) {
+                console.error('💾 Save error details:', result.error);
+            }
+        } else {
+            console.log('⚠️ Incomplete telemetry data - skipping save');
         }
     } catch (error) {
         console.error('❌ Error processing MQTT message:', error.message);
