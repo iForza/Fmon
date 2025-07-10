@@ -49,6 +49,37 @@ fastify.get('/api/telemetry/latest', async (request, reply) => {
   }
 });
 
+// API для получения новых данных телеметрии после определенного timestamp (delta-запросы)
+fastify.get('/api/telemetry/delta', async (request, reply) => {
+  try {
+    const { since } = request.query;
+    const lastTimestamp = since ? parseInt(since) : 0;
+    
+    const telemetry = db.getLatestTelemetryAfter(lastTimestamp);
+    const formatted = telemetry.map(t => ({
+      vehicle_id: t.vehicle_id,
+      vehicle_name: t.vehicle_name,
+      lat: t.lat,
+      lng: t.lng,
+      speed: t.speed,
+      battery: t.battery,
+      temperature: t.temperature,
+      rpm: t.rpm,
+      timestamp: t.timestamp // Возвращаем как число для удобства сравнения
+    }));
+    
+    return {
+      success: true,
+      data: formatted,
+      count: formatted.length,
+      lastTimestamp: formatted.length > 0 ? Math.max(...formatted.map(f => f.timestamp)) : lastTimestamp
+    };
+  } catch (error) {
+    reply.status(500);
+    return { success: false, error: error.message };
+  }
+});
+
 // API для получения истории для графиков
 fastify.get('/api/telemetry/history', async (request, reply) => {
   try {

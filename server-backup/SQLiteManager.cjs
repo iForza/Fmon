@@ -79,6 +79,18 @@ class SQLiteManager {
         
         return this.db.prepare(query).all(...params);
     }
+
+    // Новый метод для получения телеметрии после определенного timestamp (для delta-запросов)
+    getLatestTelemetryAfter(lastTimestamp) {
+        return this.db.prepare(`
+            SELECT t.*, v.name as vehicle_name 
+            FROM telemetry t 
+            JOIN vehicles v ON t.vehicle_id = v.id 
+            WHERE t.timestamp > ? 
+            ORDER BY t.timestamp DESC 
+            LIMIT 50
+        `).all(lastTimestamp || 0);
+    }
 }
 
 module.exports = SQLiteManager;

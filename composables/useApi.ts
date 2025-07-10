@@ -30,9 +30,13 @@ export const useApi = () => {
   const error = ref<string | null>(null)
   const wsConnection = ref<WebSocket | null>(null)
   
-  // Хранение интервалов для очистки
+  // Хранение интервалов для очистки и состояния polling
   let pollingInterval: NodeJS.Timeout | null = null
   let reconnectTimeout: NodeJS.Timeout | null = null
+  let lastTimestamp = ref<number>(0)
+  let pollingSpeed = ref<number>(5000) // Начальная скорость 5 секунд
+  let consecutiveEmptyResponses = ref<number>(0) // Счетчик пустых ответов
+  let hasActiveVehicles = ref<boolean>(false) // Флаг активности техники
 
   // API базовый URL
   const apiBase = '/api'
@@ -67,7 +71,26 @@ export const useApi = () => {
     }
   }
 
-  // Получение последней телеметрии
+  // Получение новых данных телеметрии (delta-запрос)
+  const fetchTelemetryDelta = async () => {
+    try {
+      const response = await $fetch<ApiResponse<any[]> & { lastTimestamp?: number }>(`${apiBase}/telemetry/delta?since=${lastTimestamp.value}`)
+      const telemetryData = response.data || []
+      
+      // Обновляем lastTimestamp для следующего запроса
+      if (response.lastTimestamp) {
+        lastTimestamp.value = response.lastTimestamp
+      }
+      
+      return { data: telemetryData, count: telemetryData.length }
+    } catch (err: any) {
+      error.value = err.message || 'Ошибка получения delta телеметрии'
+      console.error('API Error (delta telemetry):', err)
+      return { data: [], count: 0 }
+    }
+  }
+
+  // Получение последней телеметрии (полный запрос как fallback)
   const fetchTelemetry = async () => {
     try {
       const response = await $fetch<ApiResponse<any[]>>(`${apiBase}/telemetry/latest`)
@@ -114,8 +137,11 @@ export const useApi = () => {
           }
         })
 
-        // Принудительно обновляем реактивность
-        vehicles.value = new Map(vehicles.value)
+        // Умное обновление реактивности - только если есть изменения
+        const updatedVehicles = new Map(vehicles.value)
+        if (updatedVehicles.size !== vehicles.value.size || telemetryData.length > 0) {
+          vehicles.value = updatedVehicles
+        }
         
         console.log(`✅ Обновлено техники: ${vehicles.value?.size || 0}`)
       }
@@ -226,16 +252,64 @@ export const useApi = () => {
     }
   }
 
-  // Автоматическое обновление данных каждые 5 секунд
+  // Функция для расчета адаптивной скорости polling
+  const calculatePollingSpeed = (dataCount: number, hasActive: boolean) => {
+    if (dataCount === 0) {
+      consecutiveEmptyResponses.value++
+      // Если нет данных, постепенно увеличиваем интервал
+      if (consecutiveEmptyResponses.value > 3) {
+        return Math.min(15000, pollingSpeed.value * 1.5) // Максимум 15 секунд
+      }
+    } else {
+      consecutiveEmptyResponses.value = 0
+      // Если есть активная техника - частые запросы, иначе - реже
+      return hasActive ? 2000 : 8000
+    }
+    return pollingSpeed.value
+  }
+
+  // Автоматическое обновление данных с адаптивной скоростью
   const startPolling = () => {
     // Останавливаем предыдущий polling если он существует
     stopPolling()
     
-    pollingInterval = setInterval(async () => {
-      if (isConnected.value) {
+    const performPolling = async () => {
+      if (!isConnected.value) return
+      
+      try {
+        // Используем delta-запрос для оптимизации
+        const deltaResult = await fetchTelemetryDelta()
+        
+        // Анализируем активность техники
+        hasActiveVehicles.value = Array.from(vehicles.value.values()).some(v => 
+          v.status === 'active' || (v.speed || 0) > 0
+        )
+        
+        // Рассчитываем новую скорость polling
+        const newSpeed = calculatePollingSpeed(deltaResult.count, hasActiveVehicles.value)
+        
+        if (newSpeed !== pollingSpeed.value) {
+          pollingSpeed.value = newSpeed
+          console.log(`🔄 Скорость polling изменена на ${pollingSpeed.value}ms`)
+          
+          // Перезапускаем polling с новой скоростью
+          stopPolling()
+          pollingInterval = setTimeout(performPolling, pollingSpeed.value)
+          return
+        }
+        
+      } catch (err) {
+        console.error('Polling error:', err)
+        // При ошибке используем fallback - полный запрос
         await fetchTelemetry()
       }
-    }, 5000)
+      
+      // Планируем следующий запрос
+      pollingInterval = setTimeout(performPolling, pollingSpeed.value)
+    }
+    
+    // Запускаем первый запрос
+    performPolling()
 
     // Очистка при размонтировании компонента (только если есть активный компонент)
     if (getCurrentInstance()) {
@@ -249,10 +323,10 @@ export const useApi = () => {
     return stopPolling
   }
 
-  // Остановка polling
+  // Остановка polling (теперь работает с setTimeout)
   const stopPolling = () => {
     if (pollingInterval) {
-      clearInterval(pollingInterval)
+      clearTimeout(pollingInterval)
       pollingInterval = null
     }
   }
@@ -292,6 +366,7 @@ export const useApi = () => {
     // Методы
     fetchVehicles,
     fetchTelemetry,
+    fetchTelemetryDelta,
     checkApiStatus,
     initialize,
     startPolling,
