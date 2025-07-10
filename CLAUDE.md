@@ -42,6 +42,24 @@
 - **Bug Elimination**: Prioritize critical bug fixes over feature additions
 - **Documentation**: Create comprehensive error reports with prioritized solutions
 
+## ВАЖНЫЕ ПРАВИЛА БЕЗОПАСНОСТИ И РЕЗЕРВНОГО КОПИРОВАНИЯ
+
+### Правила работы с безопасностью:
+- **НЕ ЗАНИМАТЬСЯ БЕЗОПАСНОСТЬЮ** проекта без явного запроса пользователя
+- **НЕ УДАЛЯТЬ файлы с паролями/credentials** - пользователь сам изменит их перед продакшн
+- **НЕ ВНЕДРЯТЬ** меры безопасности самостоятельно
+- **Безопасность = только по запросу** пользователя
+
+### Правила резервного копирования:
+- **ВСЕГДА ДЕЛАТЬ BACKUP** перед удалением файлов
+- **Создавать папку** `/archive/backup-ГГГГ-ММ-ДД/` для каждого backup
+- **Сохранять все удаляемые файлы** в backup папку
+- **Информировать пользователя** о создании backup
+
+### Восстановленные файлы после ошибки:
+- `esp32/fleet_tracker.ino` - восстановлен из git истории (коммит 223fcbe)
+- `esp32/consol.txt` - создан заново (логи отладки)
+
 ## Working Solutions Memory
 *This section will be updated as successful solutions are discovered*
 
