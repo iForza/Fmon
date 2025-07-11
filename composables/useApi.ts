@@ -38,8 +38,17 @@ export const useApi = () => {
   let consecutiveEmptyResponses = ref<number>(0) // Счетчик пустых ответов
   let hasActiveVehicles = ref<boolean>(false) // Флаг активности техники
 
-  // API базовый URL
-  const apiBase = '/api'
+  // API базовый URL - используем правильный сервер с БД на порту 3001
+  const getApiBase = () => {
+    if (process.client) {
+      // В браузере используем текущий хост с портом 3001
+      return `${window.location.protocol}//${window.location.hostname}:3001/api`
+    } else {
+      // На сервере используем localhost
+      return 'http://127.0.0.1:3001/api'
+    }
+  }
+  const apiBase = getApiBase()
 
   // Получение всех транспортных средств
   const fetchVehicles = async (): Promise<VehicleData[]> => {
