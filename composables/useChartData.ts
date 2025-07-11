@@ -219,7 +219,7 @@ export const useChartData = () => {
         data: VehicleChartData[]
         range: string
         count: number
-      }>(`${process.client ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://127.0.0.1:3001'}/api/telemetry/history?${params}`)
+      }>(`/api/telemetry/history?${params}`)
 
       if (response.success) {
         // Обновляем кеш с новыми данными
