@@ -119,6 +119,7 @@ const handleVehicleSelect = (vehicleId: string) => {
 
 // Инициализация при монтировании
 onMounted(async () => {
+  // API уже инициализирован в app.vue, просто инициализируем менеджер
   await vehicleManager.initialize()
   updateLastUpdateTime()
   

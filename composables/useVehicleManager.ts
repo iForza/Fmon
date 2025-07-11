@@ -1,4 +1,4 @@
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted, watch } from 'vue'
 import { useApi } from './useApi'
 import { useTime } from './useTime'
 
@@ -116,31 +116,27 @@ export const useVehicleManager = () => {
   
   // Инициализация менеджера
   const initialize = async () => {
-    // Инициализируем API
-    await api.initialize()
-    
-    // Запускаем polling данных
-    api.startPolling()
+    // Инициализируем API только если он еще не инициализирован
+    if (!api.isConnected.value) {
+      await api.initialize()
+      api.startPolling()
+    }
     
     // Запускаем автоочистку
     cleanupInterval = setInterval(() => {
       cleanupOldDevices()
     }, CLEANUP_INTERVAL)
     
-    // Следим за изменениями в API
-    const updateFromApi = () => {
-      if (api.allVehicles.value.length > 0) {
-        processVehicleData(api.allVehicles.value)
-      }
-    }
-    
-    // Обновляем данные при каждом изменении в API
-    const stopWatching = api.allVehicles.value.length
-    const watchApi = () => {
-      updateFromApi()
-      setTimeout(watchApi, 2000) // Проверяем каждые 2 секунды
-    }
-    watchApi()
+    // Реактивное отслеживание изменений в API
+    watch(
+      () => api.allVehicles.value,
+      (newVehicles) => {
+        if (newVehicles.length > 0) {
+          processVehicleData(newVehicles)
+        }
+      },
+      { immediate: true, deep: true }
+    )
   }
   
   // Выбор устройства

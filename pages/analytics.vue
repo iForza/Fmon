@@ -252,9 +252,14 @@ let cleanupChartAutoUpdate = null
 onMounted(async () => {
   console.log('Analytics: Страница с ECharts загружена')
   
-  // Подключаемся к API если не подключены
+  // API уже инициализирован в app.vue, просто дожидаемся подключения
   if (!api.isConnected.value) {
-    await api.initialize()
+    // Ждем инициализации API (максимум 5 секунд)
+    let attempts = 0
+    while (!api.isConnected.value && attempts < 50) {
+      await new Promise(resolve => setTimeout(resolve, 100))
+      attempts++
+    }
   }
   
   // Загружаем начальные данные графиков
