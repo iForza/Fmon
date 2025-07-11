@@ -76,6 +76,7 @@ void setup() {
   // Настройка MQTT
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(onMqttMessage);
+  client.setKeepAlive(60); // Добавляем keepAlive как в рабочем mqtt_test
   
   Serial.println("Инициализация завершена!");
   Serial.println("Трактор готов к работе...");
@@ -124,9 +125,9 @@ void reconnectMQTT() {
   while (!client.connected()) {
     Serial.print("Подключение к MQTT брокеру...");
     
-    // Создаем уникальный client ID
-    String clientId = "ESP32Tractor-";
-    clientId += String(random(0xffff), HEX);
+    // Создаем уникальный client ID с timestamp (как в рабочем mqtt_test)
+    String clientId = "ESP32Tractor_";
+    clientId += String(millis());
     
     if (client.connect(clientId.c_str())) {
       Serial.println(" успешно!");
