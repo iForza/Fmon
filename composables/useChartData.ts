@@ -214,28 +214,12 @@ export const useChartData = () => {
         params.append('vehicleId', selectedVehicleId.value)
       }
 
-      // Определяем правильный API URL в зависимости от окружения
-      const getApiUrl = () => {
-        if (process.client) {
-          // В браузере - проверяем разработка или продакшен
-          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return `${window.location.protocol}//${window.location.hostname}:3001`
-          } else {
-            // В продакшене используем nginx proxy
-            return `${window.location.protocol}//${window.location.hostname}`
-          }
-        } else {
-          // На сервере
-          return 'http://127.0.0.1:3001'
-        }
-      }
-
       const response = await $fetch<{
         success: boolean
         data: VehicleChartData[]
         range: string
         count: number
-      }>(`${getApiUrl()}/api/telemetry/history?${params}`)
+      }>(`${process.client ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://127.0.0.1:3001'}/api/telemetry/history?${params}`)
 
       if (response.success) {
         // Обновляем кеш с новыми данными
