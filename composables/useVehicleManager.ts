@@ -1,12 +1,12 @@
-import { ref, computed, onUnmounted, watch } from 'vue'
+import { ref, computed, onUnmounted, watch, getCurrentInstance } from 'vue'
 import { useApi } from './useApi'
 import { useTime } from './useTime'
 
 // Типы для состояний устройств
 export enum VehicleStatus {
-  ONLINE = 'online',       // Получаем данные < 10 сек
-  IDLE = 'idle',           // Получаем данные < 30 сек, но нет активности
-  DISCONNECTED = 'disconnected', // Нет данных > 30 сек
+  ONLINE = 'online',       // Получаем данные < 30 сек
+  IDLE = 'idle',           // Получаем данные < 2 мин, но нет активности  
+  DISCONNECTED = 'disconnected', // Нет данных > 2 мин
   ERROR = 'error'          // Ошибка подключения
 }
 
@@ -25,7 +25,17 @@ export interface ManagedVehicle {
   connectionDuration: number
 }
 
+// Singleton состояние для предотвращения race conditions
+let vehicleManagerInstance: any = null
+let isInitializing = false
+let isInitialized = false
+let watcherUnsubscribe: any = null
+
 export const useVehicleManager = () => {
+  // Возвращаем существующий экземпляр если он есть
+  if (vehicleManagerInstance) {
+    return vehicleManagerInstance
+  }
   // Состояние
   const activeVehicles = ref<Map<string, ManagedVehicle>>(new Map())
   const inactiveVehicles = ref<Map<string, ManagedVehicle>>(new Map())
@@ -34,10 +44,10 @@ export const useVehicleManager = () => {
   // Интервал для очистки
   let cleanupInterval: NodeJS.Timeout | null = null
   
-  // Константы
-  const ONLINE_THRESHOLD = 10000  // 10 секунд
-  const IDLE_THRESHOLD = 30000    // 30 секунд
-  const CLEANUP_INTERVAL = 15000  // 15 секунд
+  // Константы (увеличенные пороги для стабильности)
+  const ONLINE_THRESHOLD = 30000   // 30 секунд (было 10)
+  const IDLE_THRESHOLD = 120000    // 2 минуты (было 30 сек)
+  const CLEANUP_INTERVAL = 15000   // 15 секунд
   
   // Подключение к API
   const api = useApi()
@@ -114,29 +124,51 @@ export const useVehicleManager = () => {
     inactiveVehicles.value = new Map(inactiveVehicles.value)
   }
   
-  // Инициализация менеджера
+  // Инициализация менеджера с защитой от race conditions
   const initialize = async () => {
-    // Инициализируем API только если он еще не инициализирован
-    if (!api.isConnected.value) {
-      await api.initialize()
-      api.startPolling()
+    // Предотвращаем множественную инициализацию
+    if (isInitializing || isInitialized) {
+      console.log('⚠️ VehicleManager уже инициализируется или инициализирован, пропускаем...')
+      return
     }
     
-    // Запускаем автоочистку
-    cleanupInterval = setInterval(() => {
-      cleanupOldDevices()
-    }, CLEANUP_INTERVAL)
+    isInitializing = true
+    console.log('🔄 Инициализация VehicleManager...')
     
-    // Реактивное отслеживание изменений в API
-    watch(
-      () => api.allVehicles.value,
-      (newVehicles) => {
-        if (newVehicles.length > 0) {
-          processVehicleData(newVehicles)
-        }
-      },
-      { immediate: true, deep: true }
-    )
+    try {
+      // Инициализируем API только если он еще не инициализирован
+      if (!api.isInitialized) {
+        await api.initialize()
+        api.startPolling()
+      }
+      
+      // Запускаем автоочистку только если еще не запущена
+      if (!cleanupInterval) {
+        cleanupInterval = setInterval(() => {
+          cleanupOldDevices()
+        }, CLEANUP_INTERVAL)
+      }
+      
+      // Создаем watcher только если еще не создан
+      if (!watcherUnsubscribe) {
+        watcherUnsubscribe = watch(
+          () => api.allVehicles.value,
+          (newVehicles) => {
+            if (newVehicles.length > 0) {
+              processVehicleData(newVehicles)
+            }
+          },
+          { immediate: true, deep: true }
+        )
+      }
+      
+      isInitialized = true
+      console.log('✅ VehicleManager инициализирован')
+    } catch (error) {
+      console.error('❌ Ошибка инициализации VehicleManager:', error)
+    } finally {
+      isInitializing = false
+    }
   }
   
   // Выбор устройства
@@ -157,21 +189,29 @@ export const useVehicleManager = () => {
   const onlineVehicles = computed(() => allActiveVehicles.value.filter(v => v.status === VehicleStatus.ONLINE))
   const movingVehicles = computed(() => allActiveVehicles.value.filter(v => v.isActive))
   
-  // Очистка ресурсов
+  // Полная очистка ресурсов
   const cleanup = () => {
+    console.log('🧹 Очистка VehicleManager ресурсов')
+    
     if (cleanupInterval) {
       clearInterval(cleanupInterval)
       cleanupInterval = null
     }
+    
+    if (watcherUnsubscribe) {
+      watcherUnsubscribe()
+      watcherUnsubscribe = null
+    }
+    
+    // Сбрасываем состояние инициализации
+    isInitialized = false
+    isInitializing = false
+    
     api.cleanup()
   }
   
-  // Автоочистка при размонтировании
-  onUnmounted(() => {
-    cleanup()
-  })
-  
-  return {
+  // Создаем экземпляр VehicleManager
+  vehicleManagerInstance = {
     // Состояние
     activeVehicles: allActiveVehicles,
     inactiveVehicles: allInactiveVehicles,
@@ -191,6 +231,20 @@ export const useVehicleManager = () => {
     // Утилиты
     formatTime,
     getRelativeTime,
-    VehicleStatus
+    VehicleStatus,
+    
+    // Статус инициализации
+    get isInitializing() { return isInitializing },
+    get isInitialized() { return isInitialized }
   }
+  
+  // Автоочистка при размонтировании (только если есть активный компонент)
+  if (getCurrentInstance()) {
+    onUnmounted(() => {
+      console.log('🧹 Очистка VehicleManager ресурсов при размонтировании')
+      cleanup()
+    })
+  }
+  
+  return vehicleManagerInstance
 }

@@ -23,7 +23,17 @@ interface ApiResponse<T> {
   database?: string
 }
 
+// Singleton состояние для предотвращения race conditions
+let apiInstance: any = null
+let isInitializing = false
+let isInitialized = false
+
 export const useApi = () => {
+  // Возвращаем существующий экземпляр если он есть
+  if (apiInstance) {
+    return apiInstance
+  }
+  
   const vehicles = ref<Map<string, VehicleData>>(new Map())
   const isConnected = ref(false)
   const isLoading = ref(false)
@@ -230,25 +240,39 @@ export const useApi = () => {
     }
   }
 
-  // Инициализация - получение данных
+  // Инициализация с защитой от race conditions
   const initialize = async () => {
+    // Предотвращаем множественную инициализацию
+    if (isInitializing || isInitialized) {
+      console.log('⚠️ API уже инициализируется или инициализирован, пропускаем...')
+      return
+    }
+    
+    isInitializing = true
     console.log('🔄 Инициализация API клиента...')
     
-    // Проверяем статус API
-    await checkApiStatus()
-    
-    if (isConnected.value) {
-      // Сначала получаем список техники из SQLite
-      console.log('📋 Получение списка техники из SQLite...')
-      await fetchVehicles()
+    try {
+      // Проверяем статус API
+      await checkApiStatus()
       
-      // Затем получаем телеметрию и объединяем данные
-      console.log('📡 Получение телеметрии ESP32...')
-      await fetchTelemetry()
-      
-      console.log(`✅ API клиент инициализирован. Техники: ${vehicles.value?.size || 0}`)
-    } else {
-      console.error('❌ API недоступен')
+      if (isConnected.value) {
+        // Сначала получаем список техники из SQLite
+        console.log('📋 Получение списка техники из SQLite...')
+        await fetchVehicles()
+        
+        // Затем получаем телеметрию и объединяем данные
+        console.log('📡 Получение телеметрии ESP32...')
+        await fetchTelemetry()
+        
+        isInitialized = true
+        console.log(`✅ API клиент инициализирован. Техники: ${vehicles.value?.size || 0}`)
+      } else {
+        console.error('❌ API недоступен')
+      }
+    } catch (error) {
+      console.error('❌ Ошибка инициализации API:', error)
+    } finally {
+      isInitializing = false
     }
   }
 
@@ -268,13 +292,21 @@ export const useApi = () => {
     return pollingSpeed.value
   }
 
-  // Автоматическое обновление данных с адаптивной скоростью
+  // Автоматическое обновление данных с защитой от множественного запуска
   const startPolling = () => {
-    // Останавливаем предыдущий polling если он существует
-    stopPolling()
+    // Предотвращаем множественный запуск polling
+    if (pollingInterval) {
+      console.log('⚠️ Polling уже запущен, пропускаем...')
+      return stopPolling
+    }
+    
+    console.log('🔄 Запуск polling с интервалом:', pollingSpeed.value + 'ms')
     
     const performPolling = async () => {
-      if (!isConnected.value) return
+      if (!isConnected.value) {
+        console.log('⚠️ API не подключен, останавливаем polling')
+        return
+      }
       
       try {
         // Используем delta-запрос для оптимизации
@@ -304,16 +336,19 @@ export const useApi = () => {
         await fetchTelemetry()
       }
       
-      // Планируем следующий запрос
-      pollingInterval = setTimeout(performPolling, pollingSpeed.value)
+      // Планируем следующий запрос только если polling еще активен
+      if (pollingInterval) {
+        pollingInterval = setTimeout(performPolling, pollingSpeed.value)
+      }
     }
     
     // Запускаем первый запрос
-    performPolling()
+    pollingInterval = setTimeout(performPolling, 1000) // Первый запрос через 1 сек
 
     // Очистка при размонтировании компонента (только если есть активный компонент)
     if (getCurrentInstance()) {
       onUnmounted(() => {
+        console.log('🧹 Очистка API ресурсов при размонтировании')
         stopPolling()
         disconnectWebSocket()
       })
@@ -323,9 +358,10 @@ export const useApi = () => {
     return stopPolling
   }
 
-  // Остановка polling (теперь работает с setTimeout)
+  // Остановка polling с логированием
   const stopPolling = () => {
     if (pollingInterval) {
+      console.log('⏹️ Остановка polling')
       clearTimeout(pollingInterval)
       pollingInterval = null
     }
@@ -333,8 +369,11 @@ export const useApi = () => {
 
   // Полная очистка ресурсов
   const cleanup = () => {
+    console.log('🧹 Полная очистка API ресурсов')
     stopPolling()
     disconnectWebSocket()
+    isInitialized = false
+    isInitializing = false
   }
 
   // Вычисляемые свойства
@@ -345,10 +384,10 @@ export const useApi = () => {
       // Считаем технику активной если:
       // 1. Статус явно 'active' (ESP32 передаёт это поле)
       // 2. ИЛИ скорость больше 0
-      // 3. И последнее обновление было менее 60 секунд назад (техника онлайн)
+      // 3. И последнее обновление было менее 2 минут назад (техника онлайн)
       const hasActiveStatus = v.status === 'active'
       const isMoving = (v.speed || 0) > 0
-      const isOnline = v.lastUpdate && (now - new Date(v.lastUpdate).getTime()) < 60000 // 1 минута
+      const isOnline = v.lastUpdate && (now - new Date(v.lastUpdate).getTime()) < 120000 // 2 минуты
       
       console.log(`🚜 ${v.id}: status=${v.status}, speed=${v.speed}, online=${isOnline}, active=${hasActiveStatus || isMoving}`)
       
@@ -356,7 +395,8 @@ export const useApi = () => {
     }).length
   })
 
-  return {
+  // Создаем экземпляр API
+  apiInstance = {
     // Состояние
     vehicles,
     isConnected,
@@ -377,6 +417,12 @@ export const useApi = () => {
     
     // Вычисляемые свойства
     allVehicles,
-    activeVehicles
+    activeVehicles,
+    
+    // Статус инициализации
+    get isInitializing() { return isInitializing },
+    get isInitialized() { return isInitialized }
   }
+  
+  return apiInstance
 } 

@@ -2,19 +2,81 @@ const mqtt = require('mqtt');
 const SQLiteManager = require('./SQLiteManager.cjs');
 const db = new SQLiteManager();
 
-console.log('🔌 Connecting to Eclipse Mosquitto (test.mosquitto.org)...');
-const client = mqtt.connect('mqtt://test.mosquitto.org:1883', {
+console.log('🔌 Connecting to WQTT.RU MQTT Collector v2.0 (m9.wqtt.ru:20264)...');
+const client = mqtt.connect('mqtt://m9.wqtt.ru:20264', {
     clientId: 'mapmon-server-' + Date.now(),
-    // Аутентификация НЕ ТРЕБУЕТСЯ для публичного брокера
+    username: 'u_MZEPA5',
+    password: 'L3YAUTS6',
+    keepalive: 120,
+    reconnectPeriod: 3000,
+    connectTimeout: 15 * 1000,
+    clean: true,
+    protocolVersion: 4
 });
 
 client.on('connect', () => {
-    console.log('✅ MQTT Connected - Eclipse Mosquitto');
-    client.subscribe('car');
-    client.subscribe('vehicles/+/telemetry');
-    client.subscribe('vehicles/+/status');
-    client.subscribe('vehicles/+/heartbeat');
-    console.log('📡 Subscribed to all ESP32 topics');
+    console.log('✅ MQTT Connected - WQTT.RU v2.0');
+    console.log('🔐 Аутентификация прошла успешно');
+    console.log('');
+    
+    // === ПОДПИСКИ НА ТОПИКИ v2.0 ===
+    
+    // Основные данные устройств (новая архитектура)
+    client.subscribe('mapmon/vehicles/+/data/telemetry', { qos: 1 }, (err) => {
+        if (!err) console.log('📊 Подписка: mapmon/vehicles/+/data/telemetry (QoS 1)');
+    });
+    client.subscribe('mapmon/vehicles/+/data/gps', { qos: 0 }, (err) => {
+        if (!err) console.log('📍 Подписка: mapmon/vehicles/+/data/gps (QoS 0)');
+    });
+    client.subscribe('mapmon/vehicles/+/data/sensors', { qos: 1 }, (err) => {
+        if (!err) console.log('🔧 Подписка: mapmon/vehicles/+/data/sensors (QoS 1)');
+    });
+    
+    // Статусы устройств
+    client.subscribe('mapmon/vehicles/+/status/connection', { qos: 1 }, (err) => {
+        if (!err) console.log('🔌 Подписка: mapmon/vehicles/+/status/connection (QoS 1)');
+    });
+    client.subscribe('mapmon/vehicles/+/status/health', { qos: 1 }, (err) => {
+        if (!err) console.log('💓 Подписка: mapmon/vehicles/+/status/health (QoS 1)');
+    });
+    
+    // Уведомления
+    client.subscribe('mapmon/vehicles/+/alerts/critical', { qos: 2 }, (err) => {
+        if (!err) console.log('🚨 Подписка: mapmon/vehicles/+/alerts/critical (QoS 2)');
+    });
+    client.subscribe('mapmon/vehicles/+/alerts/warnings', { qos: 1 }, (err) => {
+        if (!err) console.log('⚠️ Подписка: mapmon/vehicles/+/alerts/warnings (QoS 1)');
+    });
+    
+    // === LEGACY ТОПИКИ (обратная совместимость) ===
+    client.subscribe('car', { qos: 0 }, (err) => {
+        if (!err) console.log('🚗 Подписка: car (legacy, QoS 0)');
+    });
+    client.subscribe('vehicles/+/telemetry', { qos: 0 }, (err) => {
+        if (!err) console.log('📊 Подписка: vehicles/+/telemetry (legacy, QoS 0)');
+    });
+    client.subscribe('vehicles/+/status', { qos: 0 }, (err) => {
+        if (!err) console.log('📡 Подписка: vehicles/+/status (legacy, QoS 0)');
+    });
+    client.subscribe('vehicles/+/heartbeat', { qos: 0 }, (err) => {
+        if (!err) console.log('💓 Подписка: vehicles/+/heartbeat (legacy, QoS 0)');
+    });
+    
+    // Старые топики (совместимость с предыдущими версиями)
+    client.subscribe('mapmon/vehicles/+/telemetry', { qos: 0 }, (err) => {
+        if (!err) console.log('📊 Подписка: mapmon/vehicles/+/telemetry (legacy v1)');
+    });
+    client.subscribe('mapmon/vehicles/+/status', { qos: 0 }, (err) => {
+        if (!err) console.log('📡 Подписка: mapmon/vehicles/+/status (legacy v1)');
+    });
+    client.subscribe('mapmon/vehicles/+/heartbeat', { qos: 0 }, (err) => {
+        if (!err) console.log('💓 Подписка: mapmon/vehicles/+/heartbeat (legacy v1)');
+    });
+    
+    console.log('');
+    console.log('📡 Все подписки WQTT.RU v2.0 настроены!');
+    console.log('🎯 Поддержка legacy топиков включена для обратной совместимости');
+    console.log('');
 });
 
 client.on('message', (topic, message) => {
