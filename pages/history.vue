@@ -50,12 +50,12 @@
             <div class="bg-gray-800 rounded-lg p-4">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-sm text-gray-400">Live MQTT</p>
-                  <p class="text-lg font-bold" :class="mqttDebug.isConnected ? 'text-green-500' : 'text-red-500'">
-                    {{ mqttDebug.isConnected ? '🟢 Online' : '🔴 Offline' }}
+                  <p class="text-sm text-gray-400">WQTT.RU MQTT</p>
+                  <p class="text-lg font-bold" :class="unifiedMqtt.isConnected.value ? 'text-green-500' : 'text-red-500'">
+                    {{ unifiedMqtt.isConnected.value ? '🟢 Online' : (unifiedMqtt.isConnecting.value ? '🟡 Connecting' : '🔴 Offline') }}
                   </p>
                 </div>
-                <UIcon name="i-heroicons-wifi" :class="mqttDebug.isConnected ? 'text-green-500' : 'text-red-500'" />
+                <UIcon name="i-heroicons-wifi" :class="unifiedMqtt.isConnected.value ? 'text-green-500' : 'text-red-500'" />
               </div>
             </div>
 
@@ -63,7 +63,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-400">Live Сообщений</p>
-                  <p class="text-lg font-bold text-blue-400">{{ mqttDebug.statistics.totalMessages || 0 }}</p>
+                  <p class="text-lg font-bold text-blue-400">{{ unifiedMqtt.statistics.value.totalMessages || 0 }}</p>
                 </div>
                 <UIcon name="i-heroicons-chat-bubble-left-right" class="text-blue-400" />
               </div>
@@ -73,7 +73,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-400">Ошибок</p>
-                  <p class="text-lg font-bold text-red-400">{{ mqttDebug.statistics.errors || 0 }}</p>
+                  <p class="text-lg font-bold text-red-400">{{ unifiedMqtt.statistics.value.errors || 0 }}</p>
                 </div>
                 <UIcon name="i-heroicons-exclamation-triangle" class="text-red-400" />
               </div>
@@ -83,7 +83,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-sm text-gray-400">ESP32 Устройств</p>
-                  <p class="text-lg font-bold text-green-400">{{ mqttDebug.statistics.activeDevices?.size || 0 }}</p>
+                  <p class="text-lg font-bold text-green-400">{{ unifiedMqtt.connectedDevices.value.length || 0 }}</p>
                 </div>
                 <UIcon name="i-heroicons-cpu-chip" class="text-green-400" />
               </div>
@@ -138,8 +138,9 @@
               class="h-full overflow-y-auto font-mono text-sm space-y-1"
               :class="{ 'scroll-smooth': autoScroll }"
             >
+              <!-- Объединенные сообщения: MQTT + SQLite + API -->
               <div
-                v-for="(message, index) in mqttDebug.messages"
+                v-for="(message, index) in combinedMessages"
                 :key="`${message.id}-${index}`"
                 class="flex items-start space-x-2 py-1"
                 :class="getLiveMessageClass(message.type)"
@@ -154,19 +155,19 @@
                 </span>
                 <!-- Источник -->
                 <span class="text-blue-400 min-w-[120px] text-xs truncate">
-                  {{ message.source }}
+                  {{ message.source || message.device_id || message.topic }}
                 </span>
                 <!-- Сообщение -->
                 <span class="flex-1 text-xs break-all">
-                  {{ message.text }}
+                  {{ formatMessage(message) }}
                 </span>
               </div>
               
               <!-- Заглушка если нет сообщений -->
-              <div v-if="mqttDebug.messages.length === 0" class="text-center text-gray-500 mt-8">
+              <div v-if="combinedMessages.length === 0" class="text-center text-gray-500 mt-8">
                 <UIcon name="i-heroicons-signal-slash" class="text-4xl mb-4" />
-                <p>Ожидание реальных MQTT сообщений от ESP32...</p>
-                <p class="text-xs mt-2">{{ mqttDebug.isConnected ? 'Подключите ESP32 устройство' : 'Подключение к MQTT брокеру...' }}</p>
+                <p>Ожидание сообщений от WQTT.RU и SQLite...</p>
+                <p class="text-xs mt-2">{{ unifiedMqtt.isConnected.value ? 'ESP32 → WQTT.RU → SQLite' : 'Подключение к WQTT.RU...' }}</p>
               </div>
             </div>
           </div>
@@ -263,28 +264,28 @@
               <div>
                 <label class="block text-sm text-gray-400 mb-2">Live MQTT Брокер</label>
                 <div class="text-sm text-gray-300">
-                  🌍 test.mosquitto.org:8081/mqtt
+                  🌍 m9.wqtt.ru:20264 (WQTT.RU)
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
-                  WebSocket для браузера | Только реальные данные ESP32
+                  TCP/WebSocket | Единый MQTT брокер для всего проекта
                 </div>
                 <div class="text-xs text-green-400 mt-1">
-                  📡 car, vehicles/+/status, vehicles/+/heartbeat
+                  📡 mapmon/vehicles/+/data/*, car, vehicles/+/*
                 </div>
               </div>
               <div>
-                <label class="block text-sm text-gray-400 mb-2">Подключение</label>
+                <label class="block text-sm text-gray-400 mb-2">Управление MQTT</label>
                 <div class="flex space-x-2">
                   <button
-                    @click="mqttDebug.connectToApi"
-                    :disabled="mqttDebug.isConnected"
+                    @click="connectUnifiedMqtt"
+                    :disabled="unifiedMqtt.isConnected.value || unifiedMqtt.isConnecting.value"
                     class="px-3 py-2 rounded text-sm font-medium transition-colors bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
                   >
-                    {{ mqttDebug.isConnected ? 'Подключен' : 'Подключить' }}
+                    {{ unifiedMqtt.isConnected.value ? 'WQTT Подключен' : (unifiedMqtt.isConnecting.value ? 'Подключение...' : 'Подключить WQTT') }}
                   </button>
                   <button
-                    @click="mqttDebug.disconnect"
-                    :disabled="!mqttDebug.isConnected"
+                    @click="disconnectUnifiedMqtt"
+                    :disabled="!unifiedMqtt.isConnected.value"
                     class="px-3 py-2 rounded text-sm font-medium transition-colors bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
                   >
                     Отключить
@@ -302,6 +303,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, getCurrentInstance, watch, readonly } from 'vue'
 import { useApi } from '~/composables/useApi'
+import { useMqttClient } from '~/composables/useMqttClient'
 
 // Установка темы приложения
 useColorMode().value = 'dark'
@@ -346,6 +348,67 @@ const formatTime = (timestamp) => {
   return new Date(timestamp).toLocaleTimeString('ru-RU')
 }
 
+// Функция форматирования сообщений для консоли
+const formatMessage = (message) => {
+  if (message.type === 'MQTT') {
+    // Форматирование MQTT сообщений из единого клиента
+    const payload = message.payload || message.raw
+    if (typeof payload === 'object' && payload !== null) {
+      if (payload.lat && payload.lng) {
+        return `📍 GPS: ${payload.lat}, ${payload.lng} | Скорость: ${payload.speed || 0}км/ч`
+      }
+      return `📡 ${JSON.stringify(payload).substring(0, 100)}`
+    }
+    return `📡 ${payload || message.text || 'данные получены'}`
+  }
+  
+  if (message.type === 'SQLITE') {
+    return message.text || `📊 Запись БД: ${message.source}`
+  }
+  
+  if (message.type === 'SYSTEM') {
+    return `🔧 ${message.text || message.source}`
+  }
+  
+  if (message.type === 'ERROR') {
+    return `❌ ${message.text || message.source}`
+  }
+  
+  // Для остальных типов
+  return message.text || message.source || 'неизвестное сообщение'
+}
+
+// Объединяем сообщения из всех источников
+const combinedMessages = computed(() => {
+  const allMessages = []
+  
+  // Добавляем сообщения из единого MQTT клиента
+  const mqttMessages = unifiedMqtt.messages.value.map(msg => ({
+    id: msg.id,
+    timestamp: msg.timestamp,
+    type: 'MQTT',
+    source: msg.device_id || msg.topic,
+    topic: msg.topic,
+    payload: msg.payload,
+    device_id: msg.device_id
+  }))
+  
+  // Добавляем сообщения из API отладчика
+  const apiMessages = mqttDebug.messages.value.map(msg => ({
+    id: msg.id,
+    timestamp: msg.timestamp,
+    type: msg.type,
+    source: msg.source,
+    text: msg.text,
+    raw: msg.raw
+  }))
+  
+  allMessages.push(...mqttMessages, ...apiMessages)
+  
+  // Сортируем по времени (новые сверху)
+  return allMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+})
+
 // Переменная для хранения функции очистки API
 let apiCleanup = null
 
@@ -356,6 +419,12 @@ onMounted(async () => {
   
   // Запускаем опрос данных для вкладки "История" и сохраняем функцию очистки
   apiCleanup = api.startPolling()
+  
+  // Автоматически подключаем единый MQTT клиент
+  if (!unifiedMqtt.isConnected.value && !unifiedMqtt.isConnecting.value) {
+    console.log('🔄 Автоподключение к WQTT.RU MQTT...')
+    await unifiedMqtt.connect()
+  }
 })
 
 onUnmounted(() => {
@@ -371,6 +440,9 @@ onUnmounted(() => {
   
   // Дополнительно вызываем общую очистку
   api.cleanup()
+  
+  // НЕ отключаем единый MQTT клиент, так как он может использоваться другими компонентами
+  console.log('🔄 Единый MQTT клиент остается активным для других компонентов')
 })
 
 // Composable для Live MQTT мониторинга ESP32
@@ -561,7 +633,10 @@ const useLiveMqttDebug = () => {
   }
 }
 
-// Используем композабл для ESP32 MQTT отладчика
+// Используем единый MQTT клиент для всего проекта
+const unifiedMqtt = useMqttClient()
+
+// Используем композабл для ESP32 MQTT отладчика (интегрируем с единым клиентом)
 const mqttDebug = useLiveMqttDebug()
 
 // Реактивные данные для отображения SQLite информации
@@ -667,16 +742,22 @@ watch(activeTab, (newTab) => {
       await fetchSqliteDebugData()
       // Запускаем автоматическое обновление SQLite
       startSqliteUpdates()
+      
+      // Убеждаемся что единый MQTT клиент подключен
+      if (!unifiedMqtt.isConnected.value && !unifiedMqtt.isConnecting.value) {
+        console.log('🔄 Подключение единого MQTT клиента на вкладке отладки...')
+        await unifiedMqtt.connect()
+      }
     })
   } else {
-    // Отключаем MQTT при переключении на другую вкладку
+    // Отключаем MQTT отладчик при переключении на другую вкладку
     mqttDebug.cleanup()
     stopSqliteUpdates()
   }
 }, { immediate: true })
 
-// Автопрокрутка для MQTT консоли
-watch(() => mqttDebug.messages, () => {
+// Автопрокрутка для MQTT консоли (следим за объединенными сообщениями)
+watch(() => combinedMessages.value, () => {
   if (autoScroll.value && activeTab.value === 'debug') {
     nextTick(() => {
       if (debugConsole.value) {
@@ -685,4 +766,29 @@ watch(() => mqttDebug.messages, () => {
     })
   }
 }, { deep: true })
+
+// Дополнительное отслеживание сообщений MQTT клиента
+watch(() => unifiedMqtt.messages.value, (newMessages) => {
+  if (newMessages.length > 0 && activeTab.value === 'debug') {
+    const latestMessage = newMessages[0]
+    // Добавляем сообщение в API отладчик для единообразного логирования
+    mqttDebug.addMessage('MQTT', latestMessage.device_id || latestMessage.topic, 
+      `📡 WQTT.RU: ${latestMessage.topic} | ${JSON.stringify(latestMessage.payload).substring(0, 50)}...`)
+  }
+}, { deep: true })
+
+// Функции управления единым MQTT клиентом
+const connectUnifiedMqtt = async () => {
+  if (!unifiedMqtt.isConnected.value && !unifiedMqtt.isConnecting.value) {
+    mqttDebug.addMessage('SYSTEM', 'mqtt', '🔄 Ручное подключение к WQTT.RU...')
+    await unifiedMqtt.connect()
+  }
+}
+
+const disconnectUnifiedMqtt = () => {
+  if (unifiedMqtt.isConnected.value) {
+    mqttDebug.addMessage('SYSTEM', 'mqtt', '🛑 Отключение от WQTT.RU по требованию пользователя')
+    unifiedMqtt.disconnect()
+  }
+}
 </script> 

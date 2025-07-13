@@ -183,7 +183,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { useApi } from '~/composables/useApi'
+import { useMqttClient } from '~/composables/useMqttClient'
 
 // Пропсы
 const props = defineProps({
@@ -196,23 +196,33 @@ const props = defineProps({
 // Эмиты
 const emit = defineEmits(['update:modelValue'])
 
-// Composable для API
-const api = useApi()
+// MQTT клиент (единый для всего проекта)
+const mqtt = useMqttClient()
 
 // Локальное состояние
 const testing = ref(false)
 const saving = ref(false)
 const testResult = ref(null)
 
-  // Настройки (локальная копия для редактирования)
-  const settings = ref({
-    url: 'ws://test.mosquitto.org:8080/mqtt',
-    port: '8080',
-    username: '',
-    password: '',
-    clientId: 'mapmon-client',
-    topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status']
-  })
+// Настройки MQTT (реальные значения из WQTT брокера)
+const settings = ref({
+  url: 'm9.wqtt.ru',
+  port: '20264',
+  username: 'u_MZEPA5',
+  password: 'L3YAUTS6',
+  clientId: 'mapmon-web-' + Date.now(),
+  topics: [
+    'mapmon/vehicles/+/data/telemetry',
+    'mapmon/vehicles/+/data/gps',
+    'mapmon/vehicles/+/data/sensors',
+    'mapmon/vehicles/+/status/connection',
+    'mapmon/vehicles/+/status/health',
+    'car',
+    'vehicles/+/telemetry',
+    'vehicles/+/status',
+    'vehicles/+/heartbeat'
+  ]
+})
 
 // Текстовое представление топиков
 const topicsText = computed({
@@ -228,9 +238,21 @@ const isOpen = computed({
   set: (value) => emit('update:modelValue', value)
 })
 
-const connectionStatus = computed(() => api.isConnected.value ? 'connected' : 'disconnected')
-const lastMessageTime = computed(() => 'См. API статус')
-const activeDevices = computed(() => api.vehicles.value?.size || 0)
+const connectionStatus = computed(() => {
+  if (mqtt.isConnecting.value) return 'connecting'
+  if (mqtt.isConnected.value) return 'connected'
+  if (mqtt.error.value) return 'error'
+  return 'disconnected'
+})
+
+const lastMessageTime = computed(() => {
+  if (mqtt.lastActivity.value) {
+    return mqtt.lastActivity.value.toLocaleTimeString('ru-RU')
+  }
+  return 'Нет данных'
+})
+
+const activeDevices = computed(() => mqtt.connectedDevices.value.length)
 
 // Методы
 const closeModal = () => {
@@ -253,16 +275,51 @@ const testConnection = async () => {
   testResult.value = null
   
   try {
-    // Тестируем подключение к API
-    const result = await api.checkApiStatus()
-    testResult.value = {
-      success: result?.status === 'API Server running with SQLite',
-      message: result?.status || 'API недоступен'
+    // Тестируем реальное MQTT подключение к WQTT.RU
+    if (mqtt.isConnected.value) {
+      testResult.value = {
+        success: true,
+        message: `Уже подключен к WQTT.RU! Устройств: ${mqtt.connectedDevices.value.length}, Сообщений: ${mqtt.statistics.value.totalMessages}`
+      }
+    } else {
+      // Пытаемся подключиться
+      await mqtt.connect({
+        host: settings.value.url,
+        port: parseInt(settings.value.port),
+        username: settings.value.username,
+        password: settings.value.password,
+        clientId: settings.value.clientId,
+        topics: settings.value.topics,
+        useWebSocket: process.client
+      })
+      
+      // Ждем установки соединения (до 10 секунд)
+      let attempts = 0
+      while (!mqtt.isConnected.value && attempts < 20) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        attempts++
+        
+        if (mqtt.error.value) {
+          throw new Error(mqtt.error.value)
+        }
+      }
+      
+      if (mqtt.isConnected.value) {
+        testResult.value = {
+          success: true,
+          message: 'Успешное подключение к WQTT.RU брокеру!'
+        }
+      } else {
+        testResult.value = {
+          success: false,
+          message: 'Таймаут подключения к MQTT брокеру'
+        }
+      }
     }
   } catch (error) {
     testResult.value = {
       success: false,
-      message: error.message || 'Неизвестная ошибка'
+      message: error.message || 'Ошибка подключения к MQTT'
     }
   } finally {
     testing.value = false
@@ -273,11 +330,20 @@ const saveSettings = async () => {
   saving.value = true
   
   try {
-    // Настройки API сохраняются автоматически
-    // Показываем успешное сохранение
+    // Применяем новые настройки к MQTT клиенту
+    await mqtt.updateSettings({
+      host: settings.value.url,
+      port: parseInt(settings.value.port),
+      username: settings.value.username,
+      password: settings.value.password,
+      clientId: settings.value.clientId,
+      topics: settings.value.topics,
+      useWebSocket: process.client
+    })
+    
     testResult.value = {
       success: true,
-      message: 'Настройки API применены! MQTT работает на сервере.'
+      message: 'Настройки WQTT.RU сохранены и применены!'
     }
     
     // Закрываем модальное окно через 2 секунды
@@ -288,7 +354,7 @@ const saveSettings = async () => {
   } catch (error) {
     testResult.value = {
       success: false,
-      message: error.message || 'Ошибка применения настроек'
+      message: error.message || 'Ошибка применения настроек MQTT'
     }
   } finally {
     saving.value = false
@@ -296,35 +362,51 @@ const saveSettings = async () => {
 }
 
 const resetToDefaults = () => {
+  // Сбрасываем к реальным WQTT.RU настройкам
   settings.value = {
-    url: 'ws://test.mosquitto.org:8080/mqtt',
-    port: '8080',
-    username: '',
-    password: '',
-    clientId: 'mapmon-client-' + Date.now(),
-    topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status']
+    url: 'm9.wqtt.ru',
+    port: '20264',
+    username: 'u_MZEPA5',
+    password: 'L3YAUTS6',
+    clientId: 'mapmon-web-' + Date.now(),
+    topics: [
+      'mapmon/vehicles/+/data/telemetry',
+      'mapmon/vehicles/+/data/gps',
+      'mapmon/vehicles/+/data/sensors',
+      'mapmon/vehicles/+/status/connection',
+      'mapmon/vehicles/+/status/health',
+      'car',
+      'vehicles/+/telemetry',
+      'vehicles/+/status',
+      'vehicles/+/heartbeat'
+    ]
   }
   testResult.value = null
 }
 
-// Загружаем информацию об API при открытии
+// Загружаем настройки MQTT при открытии
 watch(isOpen, (newValue) => {
   if (newValue) {
-    // Настройки теперь только для отображения - MQTT работает на сервере
-    settings.value = {
-      url: 'Сервер MQTT коллектор',
-      port: '1883 (TCP для ESP32)',
-      username: 'Автоматически',
-      password: 'Автоматически',
-      clientId: 'mapmon-server-' + Date.now(),
-      topics: ['car', 'vehicles/+/telemetry', 'vehicles/+/status', 'vehicles/+/heartbeat']
+    // Загружаем текущие настройки из MQTT клиента
+    if (mqtt.settings.value) {
+      settings.value = {
+        url: mqtt.settings.value.host,
+        port: mqtt.settings.value.port.toString(),
+        username: mqtt.settings.value.username,
+        password: mqtt.settings.value.password,
+        clientId: mqtt.settings.value.clientId,
+        topics: [...mqtt.settings.value.topics]
+      }
     }
     testResult.value = null
   }
 })
 
-// Инициализация
+// Инициализация MQTT при монтировании
 onMounted(() => {
-  api.initialize()
+  // Автоматически подключаемся к WQTT.RU при загрузке
+  if (!mqtt.isConnected.value && !mqtt.isConnecting.value) {
+    mqtt.connect()
+  }
 })
 </script> 
