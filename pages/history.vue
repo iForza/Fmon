@@ -171,6 +171,79 @@
             </div>
           </div>
 
+          <!-- SQLite База данных информация -->
+          <div class="bg-gray-800 rounded-lg p-4 mb-6">
+            <h4 class="text-md font-semibold text-white mb-4">📊 SQLite База данных</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Статистика базы данных -->
+              <div class="bg-gray-700 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-3">
+                  <h5 class="text-sm font-medium text-gray-300">Статистика БД</h5>
+                  <UIcon name="i-heroicons-circle-stack" class="text-blue-400" />
+                </div>
+                <div class="space-y-2 text-xs">
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Последних записей:</span>
+                    <span class="text-white font-mono">{{ sqliteDebugInfo.totalRecords }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Последнее обновление:</span>
+                    <span class="text-white font-mono">{{ formatTime(sqliteDebugInfo.lastUpdate) }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-400">Активных устройств:</span>
+                    <span class="text-green-400 font-mono">{{ sqliteDebugInfo.activeDevices }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Последние временные метки -->
+              <div class="bg-gray-700 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-3">
+                  <h5 class="text-sm font-medium text-gray-300">Временные метки</h5>
+                  <UIcon name="i-heroicons-clock" class="text-yellow-400" />
+                </div>
+                <div class="space-y-1">
+                  <div v-if="sqliteDebugInfo.recentTimestamps.length === 0" class="text-xs text-gray-500 text-center py-2">
+                    Нет данных
+                  </div>
+                  <div v-for="(ts, index) in sqliteDebugInfo.recentTimestamps.slice(0, 4)" :key="index" 
+                       class="flex justify-between text-xs">
+                    <span class="text-gray-400">{{ ts.device }}:</span>
+                    <span class="text-blue-300 font-mono">{{ formatTime(ts.timestamp) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Последние записи SQLite -->
+            <div class="mt-4 bg-gray-700 rounded-lg p-3">
+              <div class="flex items-center justify-between mb-3">
+                <h5 class="text-sm font-medium text-gray-300">🗂️ Последние записи из SQLite</h5>
+                <button @click="refreshSqliteData" 
+                        class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors">
+                  <UIcon name="i-heroicons-arrow-path" class="mr-1" />
+                  Обновить
+                </button>
+              </div>
+              <div class="max-h-32 overflow-y-auto space-y-1">
+                <div v-if="sqliteDebugInfo.recentRecords.length === 0" 
+                     class="text-xs text-gray-500 text-center py-4">
+                  📭 Записи не найдены в SQLite
+                </div>
+                <div v-for="(record, index) in sqliteDebugInfo.recentRecords" :key="index"
+                     class="flex items-center space-x-2 text-xs bg-gray-600 rounded p-2">
+                  <span class="text-yellow-400 min-w-[60px] font-mono">{{ formatTime(record.timestamp) }}</span>
+                  <span class="text-blue-400 min-w-[80px]">{{ record.vehicle_id }}</span>
+                  <span class="text-green-400 flex-1">
+                    📍 lat: {{ record.lat?.toFixed(4) || 'N/A' }}, lng: {{ record.lng?.toFixed(4) || 'N/A' }}
+                  </span>
+                  <span class="text-cyan-400">🚗 {{ record.speed || 0 }}км/ч</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Фильтры и настройки -->
           <div class="bg-gray-800 rounded-lg p-4">
             <h4 class="text-md font-semibold text-white mb-4">Настройки отладки</h4>
@@ -263,6 +336,7 @@ const getLiveMessageClass = (type) => {
     case 'ERROR': return 'text-red-300'
     case 'SYSTEM': return 'text-yellow-300'
     case 'MQTT': return 'text-gray-300'
+    case 'SQLITE': return 'text-orange-300'
     default: return 'text-gray-300'
   }
 }
@@ -291,6 +365,9 @@ onUnmounted(() => {
   if (apiCleanup) {
     apiCleanup()
   }
+  
+  // Останавливаем SQLite обновления
+  stopSqliteUpdates()
   
   // Дополнительно вызываем общую очистку
   api.cleanup()
@@ -478,6 +555,7 @@ const useLiveMqttDebug = () => {
     disconnect,
     clearMessages,
     exportMessages,
+    addMessage,
     init,
     cleanup
   }
@@ -486,17 +564,114 @@ const useLiveMqttDebug = () => {
 // Используем композабл для ESP32 MQTT отладчика
 const mqttDebug = useLiveMqttDebug()
 
+// Реактивные данные для отображения SQLite информации
+const sqliteDebugInfo = ref({
+  totalRecords: 0,
+  lastUpdate: new Date(),
+  activeDevices: 0,
+  recentTimestamps: [],
+  recentRecords: []
+})
+
+// Функция для получения данных из SQLite через API
+const fetchSqliteDebugData = async () => {
+  try {
+    // Получаем последние записи телеметрии
+    const telemetryResponse = await $fetch('/api/telemetry/latest?limit=20')
+    const telemetryData = telemetryResponse.data || []
+    
+    if (Array.isArray(telemetryData) && telemetryData.length > 0) {
+      // Обновляем статистику
+      sqliteDebugInfo.value.totalRecords = telemetryData.length
+      sqliteDebugInfo.value.lastUpdate = new Date()
+      
+      // Подсчитываем уникальные устройства
+      const uniqueDevices = new Set(telemetryData.map(item => item.vehicle_id))
+      sqliteDebugInfo.value.activeDevices = uniqueDevices.size
+      
+      // Извлекаем временные метки для каждого устройства
+      const timestampsByDevice = {}
+      telemetryData.forEach(item => {
+        if (item.vehicle_id && item.timestamp) {
+          if (!timestampsByDevice[item.vehicle_id] || 
+              new Date(item.timestamp) > new Date(timestampsByDevice[item.vehicle_id])) {
+            timestampsByDevice[item.vehicle_id] = item.timestamp
+          }
+        }
+      })
+      
+      // Преобразуем в массив временных меток для отображения
+      sqliteDebugInfo.value.recentTimestamps = Object.entries(timestampsByDevice)
+        .map(([device, timestamp]) => ({ device, timestamp: new Date(timestamp) }))
+        .sort((a, b) => b.timestamp - a.timestamp)
+      
+      // Сохраняем записи для детального отображения (последние 10)
+      sqliteDebugInfo.value.recentRecords = telemetryData
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 10)
+        .map(item => ({
+          ...item,
+          timestamp: new Date(item.timestamp)
+        }))
+      
+      // Добавляем сообщение в MQTT лог о полученных данных
+      mqttDebug.addMessage('SQLITE', 'database', 
+        `📊 Получено ${telemetryData.length} записей из SQLite, устройств: ${uniqueDevices.size}`)
+      
+    } else {
+      sqliteDebugInfo.value.recentRecords = []
+      sqliteDebugInfo.value.recentTimestamps = []
+      mqttDebug.addMessage('SQLITE', 'database', '📭 SQLite база данных пуста')
+    }
+    
+  } catch (error) {
+    console.error('Ошибка получения SQLite данных:', error)
+    mqttDebug.addMessage('ERROR', 'sqlite', `❌ Ошибка чтения SQLite: ${error.message}`)
+  }
+}
+
+// Функция для ручного обновления SQLite данных
+const refreshSqliteData = async () => {
+  mqttDebug.addMessage('SYSTEM', 'sqlite', '🔄 Обновление данных SQLite...')
+  await fetchSqliteDebugData()
+}
+
+// Автоматическое обновление SQLite данных каждые 30 секунд при активной отладке
+let sqliteUpdateInterval = null
+
+const startSqliteUpdates = () => {
+  if (sqliteUpdateInterval) return
+  
+  sqliteUpdateInterval = setInterval(async () => {
+    if (activeTab.value === 'debug' && mqttDebug.isConnected.value) {
+      await fetchSqliteDebugData()
+    }
+  }, 30000) // Каждые 30 секунд
+}
+
+const stopSqliteUpdates = () => {
+  if (sqliteUpdateInterval) {
+    clearInterval(sqliteUpdateInterval)
+    sqliteUpdateInterval = null
+  }
+}
+
 // Управление lifecycle для MQTT отладчика
 watch(activeTab, (newTab) => {
   if (newTab === 'debug') {
     // Активируем MQTT отладчик при переключении на вкладку
     mqttDebug.init()
-    nextTick(() => {
-      mqttDebug.connectToApi()
+    nextTick(async () => {
+      await mqttDebug.connectToApi()
+      // Также загружаем SQLite данные при активации отладки
+      await fetchSqliteDebugData()
+      // Запускаем автоматическое обновление SQLite
+      startSqliteUpdates()
     })
   } else {
     // Отключаем MQTT при переключении на другую вкладку
     mqttDebug.cleanup()
+    stopSqliteUpdates()
   }
 }, { immediate: true })
 

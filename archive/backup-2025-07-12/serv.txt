@@ -1,0 +1,284 @@
+root@5018543-bi97187:~# find /var/www/mapmon -name "*.db" -type f
+/var/www/mapmon/server-backup/mapmon.db
+root@5018543-bi97187:~# ls -la /var/www/mapmon/server-backup/mapmon.db
+-rw-r--r-- 1 root root 1576960 Jul 12 12:10 /var/www/mapmon/server-backup/mapmon.db
+root@5018543-bi97187:~# cd /var/www/mapmon
+sqlite3 server-backup/mapmon.db ".tables"
+telemetry  vehicles
+root@5018543-bi97187:/var/www/mapmon# sqlite3 server-backup/mapmon.db "SELECT * FROM vehicles LIMIT 5;"
+sqlite3 server-backup/mapmon.db "SELECT * FROM telemetry ORDER BY timestamp DESC LIMIT 10;"
+ESP32_Car_2046|Vehicle ESP32_Car_2046
+12021|ESP32_Car_2046|1752311437103|55.7558|37.6176|18.0|79.42|24.0|1540
+12020|ESP32_Car_2046|1752311434073|55.7558|37.6176|18.0|79.43|23.7|1540
+12019|ESP32_Car_2046|1752311431034|55.7558|37.6176|18.0|79.47|23.6|1540
+12018|ESP32_Car_2046|1752311428005|55.7558|37.6176|18.0|79.49|23.5|1540
+12017|ESP32_Car_2046|1752311424991|55.7558|37.6176|18.0|79.52|23.3|1540
+12016|ESP32_Car_2046|1752311421934|55.7558|37.6176|18.0|79.53|23.1|1540
+12015|ESP32_Car_2046|1752311418915|55.7558|37.6176|0.0|79.57|23.1|720
+12014|ESP32_Car_2046|1752311415889|55.7558|37.6176|0.0|79.58|23.2|720
+12013|ESP32_Car_2046|1752311412896|55.7558|37.6176|0.0|79.59|23.3|720
+12012|ESP32_Car_2046|1752311409817|55.7558|37.6176|0.0|79.6|23.5|720
+root@5018543-bi97187:/var/www/mapmon# # API статус
+curl -s http://localhost:3001/api/status | jq
+
+# Список техники через API
+curl -s http://localhost:3001/api/vehicles | jq
+
+# Последние данные телеметрии
+curl -s http://localhost:3001/api/telemetry/latest | jq
+
+# Данные конкретного устройства ESP32_Car_2046
+curl -s "http://localhost:3001/api/telemetry/latest?vehicleId=ESP32_Car_2046" | jq
+Command 'jq' not found, but can be installed with:
+snap install jq  # version 1.5+dfsg-1, or
+apt  install jq  # version 1.6-2.1ubuntu3
+See 'snap info jq' for additional versions.
+Command 'jq' not found, but can be installed with:
+snap install jq  # version 1.5+dfsg-1, or
+apt  install jq  # version 1.6-2.1ubuntu3
+See 'snap info jq' for additional versions.
+Command 'jq' not found, but can be installed with:
+snap install jq  # version 1.5+dfsg-1, or
+apt  install jq  # version 1.6-2.1ubuntu3
+See 'snap info jq' for additional versions.
+Command 'jq' not found, but can be installed with:
+snap install jq  # version 1.5+dfsg-1, or
+apt  install jq  # version 1.6-2.1ubuntu3
+See 'snap info jq' for additional versions.
+root@5018543-bi97187:/var/www/mapmon# # Логи MQTT collector
+pm2 logs mqtt-collector --lines 20
+
+# Проверить конфигурацию MQTT
+cat /var/www/mapmon/server-backup/mqtt-collector.cjs | grep -A 10 -B 10 "ESP32"
+
+# Проверить куда MQTT сохраняет данные
+grep -n "INSERT\|UPDATE" /var/www/mapmon/server-backup/mqtt-collector.cjs
+[TAILING] Tailing last 20 lines for [mqtt-collector] process (change the value with --lines option)
+/var/www/mapmon/logs/mqtt-error-2.log last 20 lines:
+2|mqtt-col | 2025-06-26T22:27:47: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:28:18: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:28:49: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:29:20: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:29:51: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:30:22: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:30:53: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:31:24: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:31:55: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:32:26: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:32:57: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:33:28: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:33:59: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:34:30: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:35:01: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:35:32: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-26T22:36:03: ❌ MQTT Error: connack timeout
+2|mqtt-col | 2025-06-27T15:08:47: ❌ MQTT Error: Keepalive timeout
+2|mqtt-col | 2025-07-06T20:54:19: ❌ MQTT Error: read ECONNRESET
+2|mqtt-col | 2025-07-08T07:30:18: ❌ MQTT Error: read ECONNRESET
+
+/var/www/mapmon/logs/mqtt-out-2.log last 20 lines:
+2|mqtt-col | 2025-07-12T14:50:08: 📊 Processed data for device ESP32_Car_2046: {
+2|mqtt-col |   id: 'ESP32_Car_2046',
+2|mqtt-col |   lat: 55.7558,
+2|mqtt-col |   lng: 37.6176,
+2|mqtt-col |   speed: 10,
+2|mqtt-col |   status: 'active',
+2|mqtt-col |   battery: 85.15,
+2|mqtt-col |   temperature: 22.1,
+2|mqtt-col |   rpm: 1775,
+2|mqtt-col |   timestamp: 65267,
+2|mqtt-col |   messageCount: 20,
+2|mqtt-col |   rssi: -69,
+2|mqtt-col |   freeHeap: 256724,
+2|mqtt-col |   broker: 'Eclipse Mosquitto',
+2|mqtt-col |   device_id: 'ESP32_Car_2046',
+2|mqtt-col |   vehicle_id: 'ESP32_Car_2046'
+2|mqtt-col | }
+2|mqtt-col | 2025-07-12T14:50:08: 💾 SAVED TO SQLITE - ID: 12041
+2|mqtt-col | 2025-07-12T14:50:08: 💾 SAVED TO SQLITE - ID: unknown
+2|mqtt-col | 2025-07-12T14:50:08: 💾 Saved: OK
+
+2|mqtt-collector  | 2025-07-12T14:51:11: 📡 MQTT Received topic: vehicles/ESP32_Car_2046/status, message: {"id":"ESP32_Car_2046","status":"connected","timestamp":144371,"rssi":-63,"broker":"Eclipse Mosquitto"}
+2|mqtt-collector  | 2025-07-12T14:51:11: 📊 Processed data for device ESP32_Car_2046: {
+2|mqtt-collector  |   id: 'ESP32_Car_2046',
+2|mqtt-collector  |   status: 'connected',
+2|mqtt-collector  |   timestamp: 144371,
+2|mqtt-collector  |   rssi: -63,
+2|mqtt-collector  |   broker: 'Eclipse Mosquitto',
+2|mqtt-collector  |   device_id: 'ESP32_Car_2046',
+2|mqtt-collector  |   vehicle_id: 'ESP32_Car_2046'
+2|mqtt-collector  | }
+2|mqtt-collector  | 2025-07-12T14:51:11: 💓 Heartbeat/Status message - skipping telemetry save
+2|mqtt-collector  | 2025-07-12T14:51:14: 📡 MQTT Received topic: car, message: {"id":"ESP32_Car_2046","lat":55.7558,"lng":37.6176,"speed":0,"status":"stopped","battery":84.96,"temperature":22.3,"rpm":890,"timestamp":146884,"messageCount":33,"rssi":-69,"freeHeap":253540,"broker":"Eclipse Mosquitto"}
+2|mqtt-collector  | 2025-07-12T14:51:14: 📊 Processed data for device ESP32_Car_2046: {
+2|mqtt-collector  |   id: 'ESP32_Car_2046',
+2|mqtt-collector  |   lat: 55.7558,
+2|mqtt-collector  |   lng: 37.6176,
+2|mqtt-collector  |   speed: 0,
+2|mqtt-collector  |   status: 'stopped',
+2|mqtt-collector  |   battery: 84.96,
+2|mqtt-collector  |   temperature: 22.3,
+2|mqtt-collector  |   rpm: 890,
+2|mqtt-collector  |   timestamp: 146884,
+2|mqtt-collector  |   messageCount: 33,
+2|mqtt-collector  |   rssi: -69,
+2|mqtt-collector  |   freeHeap: 253540,
+2|mqtt-collector  |   broker: 'Eclipse Mosquitto',
+2|mqtt-collector  |   device_id: 'ESP32_Car_2046',
+2|mqtt-collector  |   vehicle_id: 'ESP32_Car_2046'
+2|mqtt-collector  | }
+2|mqtt-collector  | 2025-07-12T14:51:14: 💾 SAVED TO SQLITE - ID: 12042
+2|mqtt-collector  | 2025-07-12T14:51:14: 💾 SAVED TO SQLITE - ID: unknown
+2|mqtt-collector  | 2025-07-12T14:51:14: 💾 Saved: OK
+2|mqtt-collector  | 2025-07-12T14:51:16: 📡 MQTT Received topic: vehicles/ESP32_Car_2046/heartbeat, message: {"id":"ESP32_Car_2046","type":"heartbeat","timestamp":148906,"uptime":148,"rssi":-72,"freeHeap":253572,"broker":"Eclipse Mosquitto"}
+2|mqtt-collector  | 2025-07-12T14:51:16: 📊 Processed data for device ESP32_Car_2046: {
+2|mqtt-collector  |   id: 'ESP32_Car_2046',
+2|mqtt-collector  |   type: 'heartbeat',
+2|mqtt-collector  |   timestamp: 148906,
+2|mqtt-collector  |   uptime: 148,
+2|mqtt-collector  |   rssi: -72,
+2|mqtt-collector  |   freeHeap: 253572,
+2|mqtt-collector  |   broker: 'Eclipse Mosquitto',
+2|mqtt-collector  |   device_id: 'ESP32_Car_2046',
+2|mqtt-collector  |   vehicle_id: 'ESP32_Car_2046',
+2|mqtt-collector  |   status: 'stopped'
+2|mqtt-collector  | }
+2|mqtt-collector  | 2025-07-12T14:51:16: 💓 Heartbeat/Status message - skipping telemetry save
+2|mqtt-collector  | 2025-07-12T14:51:17: 📡 MQTT Received topic: car, message: {"id":"ESP32_Car_2046","lat":55.7558,"lng":37.6176,"speed":0,"status":"stopped","battery":84.95,"temperature":22.2,"rpm":890,"timestamp":149909,"messageCount":34,"rssi":-70,"freeHeap":253540,"broker":"Eclipse Mosquitto"}
+2|mqtt-collector  | 2025-07-12T14:51:17: 📊 Processed data for device ESP32_Car_2046: {
+2|mqtt-collector  |   id: 'ESP32_Car_2046',
+2|mqtt-collector  |   lat: 55.7558,
+2|mqtt-collector  |   lng: 37.6176,
+2|mqtt-collector  |   speed: 0,
+2|mqtt-collector  |   status: 'stopped',
+2|mqtt-collector  |   battery: 84.95,
+2|mqtt-collector  |   temperature: 22.2,
+2|mqtt-collector  |   rpm: 890,
+2|mqtt-collector  |   timestamp: 149909,
+2|mqtt-collector  |   messageCount: 34,
+2|mqtt-collector  |   rssi: -70,
+2|mqtt-collector  |   freeHeap: 253540,
+2|mqtt-collector  |   broker: 'Eclipse Mosquitto',
+2|mqtt-collector  |   device_id: 'ESP32_Car_2046',
+2|mqtt-collector  |   vehicle_id: 'ESP32_Car_2046'
+2|mqtt-collector  | }
+2|mqtt-collector  | 2025-07-12T14:51:17: 💾 SAVED TO SQLITE - ID: 12043
+2|mqtt-collector  | 2025-07-12T14:51:17: 💾 SAVED TO SQLITE - ID: unknown
+2|mqtt-collector  | 2025-07-12T14:51:17: 💾 Saved: OK
+^C
+    clientId: 'mapmon-server-' + Date.now(),
+    // Аутентификация НЕ ТРЕБУЕТСЯ для публичного брокера
+});
+
+client.on('connect', () => {
+    console.log('✅ MQTT Connected - Eclipse Mosquitto');
+    client.subscribe('car');
+    client.subscribe('vehicles/+/telemetry');
+    client.subscribe('vehicles/+/status');
+    client.subscribe('vehicles/+/heartbeat');
+    console.log('📡 Subscribed to all ESP32 topics');
+});
+
+client.on('message', (topic, message) => {
+    try {
+        const messageStr = message.toString();
+        console.log(`📡 MQTT Received topic: ${topic}, message: ${messageStr}`);
+
+        let data;
+        try {
+            data = JSON.parse(messageStr);
+--
+        }
+
+        if (deviceId) {
+            data.device_id = deviceId;
+            data.vehicle_id = deviceId;
+        }
+
+        // Добавляем timestamp если отсутствует
+        data.timestamp = data.timestamp || new Date().toISOString();
+
+        // Улучшаем обработку данных для совместимости с ESP32
+        if (data.lat || data.latitude || data.gps_lat) {
+            data.lat = data.lat || data.latitude || data.gps_lat;
+        }
+        if (data.lng || data.longitude || data.lon || data.gps_lng) {
+            data.lng = data.lng || data.longitude || data.lon || data.gps_lng;
+        }
+        if (data.speed !== undefined) {
+            data.speed = parseFloat(data.speed);
+        }
+        if (data.battery || data.bat || data.batt) {
+root@5018543-bi97187:/var/www/mapmon# # Логи API сервера
+pm2 logs mapmon-api --lines 20
+
+# Проверить как API подключается к БД
+cat /var/www/mapmon/server-backup/api-server.cjs | grep -A 5 -B 5 "sqlite\|database"
+
+# Проверить SQL запросы в API
+grep -n "SELECT\|FROM" /var/www/mapmon/server-backup/api-server.cjs
+[TAILING] Tailing last 20 lines for [mapmon-api] process (change the value with --lines option)
+/var/www/mapmon/logs/api-error-1.log last 20 lines:
+/var/www/mapmon/logs/api-out-1.log last 20 lines:
+1|mapmon-a | :50:59: {"level":30,"time":1752321059915,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1ue","res":{"statusCode":200},"responseTime":1.3478689994663,"msg":"request completed"}
+1|mapmon-a | 2025-07-12T14:51:00: {"level":30,"time":1752321060010,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uf","req":{"method":"GET","url":"/api/telemetry/latest?vehicleId=ESP32_Car_2046","host":"localhost:3001","remoteAddress":"127.0.0.1","remotePort":52824},"msg":"incoming request"}
+1|mapmon-a | 2025-07-12T14:51:00: {"level":30,"time":1752321060012,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uf","res":{"statusCode":200},"responseTime":1.3381890002638102,"msg":"request completed"}
+1|mapmon-a | 2025-07-12T14:51:00: {"level":30,"time":1752321060848,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1ug","req":{"method":"GET","url":"/api/telemetry/delta?since=1752321008264","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":52832},"msg":"incoming request"}
+1|mapmon-a | 2025-07-12T14:51:00: {"level":30,"time":1752321060850,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1ug","res":{"statusCode":200},"responseTime":1.3448639996349812,"msg":"request completed"}
+1|mapmon-a | 2025-07-12T14:51:01: {"level":30,"time":1752321061848,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uh","req":{"method":"GET","url":"/api/telemetry/history?range=10min","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":32838},"msg":"incoming request"}
+1|mapmon-a | 2025-07-12T14:51:01: {"level":30,"time":1752321061849,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uh","res":{"statusCode":200},"responseTime":0.809994999319315,"msg":"request completed"}
+1|mapmon-a | 2025-07-12T14:51:06: {"level":30,"time":1752321066868,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1ui","req":{"method":"GET","url":"/api/telemetry/history?range=10min","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":32854},"msg":"incoming request"}
+1|mapmon-a | 2025-07-12T14:51:06: {"level":30,"time":1752321066869,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1ui","res":{"statusCode":200},"responseTime":0.7048730012029409,"msg":"request completed"}
+1|mapmon-a | 2025-07-12T14:51:11: {"level":30,"time":1752321071868,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uj","req":{"method":"GET","url":"/api/telemetry/history?range=10min","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":60400},"msg":"incoming request"}
+1|mapmon-a | 2025-07-12T14:51:11: {"level":30,"time":1752321071872,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uj","res":{"statusCode":200},"responseTime":1.0462239999324083,"msg":"request completed"}
+1|mapmon-a | 2025-07-12T14:51:15: {"level":30,"time":1752321075868,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uk","req":{"method":"GET","url":"/api/telemetry/delta?since=1752321008264","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":60406},"msg":"incoming request"}
+1|mapmon-a | 2025-07-12T14:51:15: {"level":30,"time":1752321075869,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uk","res":{"statusCode":200},"responseTime":0.6981070004403591,"msg":"request completed"}
+1|mapmon-a | 2025-07-12T14:51:16: {"level":30,"time":1752321076867,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1ul","req":{"method":"GET","url":"/api/telemetry/delta?since=1752321008264","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":60422},"msg":"incoming request"}
+1|mapmon-a | 2025-07-12T14:51:16: {"level":30,"time":1752321076869,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1ul","res":{"statusCode":200},"responseTime":0.64818299934268,"msg":"request completed"}
+1|mapmon-a | 2025-07-12T14:51:17: {"level":30,"time":1752321077029,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1um","req":{"method":"GET","url":"/api/telemetry/history?range=10min","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":60432},"msg":"incoming request"}
+1|mapmon-a | 2025-07-12T14:51:17: {"level":30,"time":1752321077030,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1um","res":{"statusCode":200},"responseTime":0.6943429987877607,"msg":"request completed"}
+
+1|mapmon-api  | 2025-07-12T14:51:21: {"level":30,"time":1752321081868,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1un","req":{"method":"GET","url":"/api/telemetry/history?range=10min","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":42312},"msg":"incoming request"}
+1|mapmon-api  | 2025-07-12T14:51:21: {"level":30,"time":1752321081870,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1un","res":{"statusCode":200},"responseTime":2.0717869997024536,"msg":"request completed"}
+1|mapmon-api  | 2025-07-12T14:51:24: {"level":30,"time":1752321084840,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uo","req":{"method":"GET","url":"/api/telemetry/delta?since=1752321074199","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":42324},"msg":"incoming request"}
+1|mapmon-api  | 2025-07-12T14:51:24: {"level":30,"time":1752321084842,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uo","res":{"statusCode":200},"responseTime":0.627258999273181,"msg":"request completed"}
+1|mapmon-api  | 2025-07-12T14:51:25: {"level":30,"time":1752321085868,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1up","req":{"method":"GET","url":"/api/telemetry/delta?since=1752321074199","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":42340},"msg":"incoming request"}
+1|mapmon-api  | 2025-07-12T14:51:25: {"level":30,"time":1752321085870,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1up","res":{"statusCode":200},"responseTime":1.18049499951303,"msg":"request completed"}
+1|mapmon-api  | 2025-07-12T14:51:26: {"level":30,"time":1752321086868,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uq","req":{"method":"GET","url":"/api/telemetry/history?range=10min","host":"fleetmonitor.ru","remoteAddress":"127.0.0.1","remotePort":42350},"msg":"incoming request"}
+1|mapmon-api  | 2025-07-12T14:51:26: {"level":30,"time":1752321086870,"pid":1258,"hostname":"5018543-bi97187","reqId":"req-1uq","res":{"statusCode":200},"responseTime":0.742705000564456,"msg":"request completed"}
+^C
+// API статуса
+fastify.get('/api/status', async (request, reply) => {
+  return {
+    status: 'API Server running with SQLite',
+    timestamp: new Date().toISOString(),
+    database: 'SQLite'
+  };
+});
+
+// MQTT настройки API endpoints
+fastify.get('/api/mqtt/status', async (request, reply) => {
+root@5018543-bi97187:/var/www/mapmon# # Через nginx (как делает frontend)
+curl -s "https://fleetmonitor.ru/api/vehicles" | jq
+curl -s "https://fleetmonitor.ru/api/telemetry/latest" | jq
+
+# Прямо к API (минуя nginx)
+curl -s "http://localhost:3001/api/vehicles" | jq
+curl -s "http://localhost:3001/api/telemetry/latest" | jq
+Command 'jq' not found, but can be installed with:
+snap install jq  # version 1.5+dfsg-1, or
+apt  install jq  # version 1.6-2.1ubuntu3
+See 'snap info jq' for additional versions.
+Command 'jq' not found, but can be installed with:
+snap install jq  # version 1.5+dfsg-1, or
+apt  install jq  # version 1.6-2.1ubuntu3
+See 'snap info jq' for additional versions.
+Command 'jq' not found, but can be installed with:
+snap install jq  # version 1.5+dfsg-1, or
+apt  install jq  # version 1.6-2.1ubuntu3
+See 'snap info jq' for additional versions.
+Command 'jq' not found, but can be installed with:
+snap install jq  # version 1.5+dfsg-1, or
+apt  install jq  # version 1.6-2.1ubuntu3
+See 'snap info jq' for additional versions.
+root@5018543-bi97187:/var/www/mapmon#
